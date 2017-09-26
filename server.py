@@ -1,42 +1,51 @@
+"""
+    ● принимает сообщение клиента;
+    ● формирует ответ клиенту;
+    ● отправляет ответ клиенту;
+    ● имеет параметры командной строки:
+        ○ -p <port> - TCP-порт для работы (по умолчанию использует порт 7777);
+        ○ -a <addr> - IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
+"""
+
+
 from socket import *
 import time
 import json
 
-# Создаём сокет и слушаем
-s = socket(AF_INET, SOCK_STREAM)  # Создает сокет TCP
-s.bind(('127.0.0.1', 8888))                # Присваивает порт 8888
-s.listen(5)                       # Слушаем входящие
+# Создал сокет и слушаю
+s = socket(AF_INET, SOCK_STREAM)    # Создал сокет TCP
 
-# Приводим ответ от сервера к формату JSON + JIM
-def format_response(response, alert):
-    answer = {
-        "response" : response ,
-        "time" : time.time(),
-        "alert" : alert
+# ○ -a <addr> - IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
+# ○ -p <port> - TCP-порт для работы (по умолчанию использует порт 7777);
+s.bind(('', 7777))                  # Запрепил адрес
+s.listen(5)                         # Жду входящий
+
+
+# Привожу ответ к клиенту к формату JIM
+def format_response(response_code, alert):
+    response_jim = {
+        "response": response_code,
+        "time": time.time(),
+        "alert": alert
     }
-    on_output = json.dumps(answer)
-    return on_output
+    return json.dumps(response_jim)
 
 
-# Формируем ответ для клиента
-def output_to_client(data):
-    if data['action'] == 'presence':
-        response = '200'
-        answer = format_response(response, 'Presence well done! ' + time.ctime(data['time']))
+# ● формирует ответ клиенту def;
+def response_format(presence):
+    if presence['action'] == 'presence':
+        response = format_response('200', 'Presence well done! ' + time.ctime(presence['time']))
     # elif data['action'] == 'msg':
-    #     response = '200'
-    #     answer = format_response(response, time.ctime(data['time']))
+    #     answer = format_response('200', time.ctime(data['time']))
     else:
-        response = '100'
-        answer = format_response(response, 'Не известный тип запроса --- ' + time.ctime(data['time']))
-    return answer
+        response = format_response('100', 'Unknown query --- ' + time.ctime(presence['time']))
+    return response
 
 
 while True:
-    result = s.accept()                     # Принять запрос на соединение
+    result = s.accept()                         # Принял запрос на соединение
     client, addr = result
-    client_data = client.recv(1024)         # Принимаем клиентские данные
-    data = json.loads(client_data)          # Распарсиваем JSON
-    answer = output_to_client(data)         # Формируем текст ответа клиенту
-    client.send(answer.encode('utf-8'))     # Ответ клиенту
+    presence = json.loads(client.recv(1024))    # ● принимает сообщение клиента + JSON parse;
+    response = response_format(presence)        # ● формирует ответ клиенту var;
+    client.send(response.encode('utf-8'))       # ● отправляет ответ клиенту;
     client.close()

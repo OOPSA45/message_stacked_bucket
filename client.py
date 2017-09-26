@@ -1,31 +1,42 @@
+"""
+    ● сформировать presence-сообщение;
+    ● отправить сообщение серверу;
+    ● получить ответ сервера;
+    ● разобрать сообщение сервера;
+    ● параметры командной строки скрипта client.py <addr> [<port>]:
+        ○ addr - ip-адрес сервера;
+        ○ port - tcp-порт на сервере, по умолчанию 7777.
+"""
+
+
 from socket import *
 import time
 import json
 
-s = socket(AF_INET, SOCK_STREAM)  # Создать сокет TCP
-s.connect(('localhost', 8888))   # Соединиться с сервером
+s = socket(AF_INET, SOCK_STREAM)    # Создал сокет TCP
 
-# Преобразуем соосбещние в JIM и конвертим в JSON
-def format_action(action, text = None):
+# ○ addr - ip-адрес сервера;
+# ○ port - tcp-порт на сервере, по умолчанию 7777.
+s.connect(('localhost', 7777))      # Соединился с сервером
+
+
+# ● сформировать presence-сообщение в JIM def;
+def presence_format(action):
     message = {
         'action': action,
         'time': time.time(),
     }
-
-    if text is not None:
-        message.update({'message': text})
-
-    on_output = json.dumps(message)
-    return on_output
+    return json.dumps(message)
 
 
-# Форматируем ответ для вывода в клиенте
-def message_format(server_answer):
-    view_message = 'Response code: ' + server_answer['response'] + "\n"
-    view_message += '--- ' + server_answer['alert'] + " ---\n"
-    print(view_message)
+# ● разобрать сообщение сервера def;
+def response_format(response):
+    output = 'Response code: ' + response['response'] + "\n"
+    output += '--- ' + response['alert'] + " ---\n"
+    return output
 
-message = format_action('presence')         # Формируем presence сообщение
-s.send(message.encode('utf-8'))                  # Отправляем сообщение на сервер
-server_answer = json.loads(s.recv(1024))    # Принимаем ответ сервера и распарсиваем JSON
-message_format(server_answer)
+
+message = presence_format('presence')       # ● сформировать presence-сообщение var;
+s.send(message.encode('utf-8'))             # ● отправить сообщение серверу + кодировки;
+response = json.loads(s.recv(1024))         # ● получить ответ сервера + JSON parse;
+print(response_format(response))            # ● разобрать сообщение сервера var + print();
