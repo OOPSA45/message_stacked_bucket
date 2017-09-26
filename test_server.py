@@ -1,7 +1,7 @@
 import server
 import unittest
 
-class TestResponse(unittest.TestCase):
+class TestResponseFormat(unittest.TestCase):
 
     def test_response_format(self):
         func = server.presence_format('200', 'any_time', 'any_text')
