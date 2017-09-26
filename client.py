@@ -21,10 +21,11 @@ s.connect(('localhost', 7777))      # Соединился с сервером
 
 
 # ● сформировать presence-сообщение в JIM def;
-def presence_format(action):
+
+def presence_format(action, time):
     message = {
         'action': action,
-        'time': time.time(),
+        'time': time,
     }
     return json.dumps(message)
 
@@ -36,8 +37,8 @@ def response_parse(response):
     return output
 
 
-presence = presence_format('presence')      # ● сформировать presence-сообщение var;
-s.send(presence.encode('utf-8'))            # ● отправить сообщение серверу + кодировки;
+presence = presence_format('presence', time.time())     # ● сформировать presence-сообщение var;
+s.send(presence.encode('utf-8'))                        # ● отправить сообщение серверу + кодировки;
 
 response = json.loads(s.recv(1024))         # ● получить ответ сервера + JSON parse;
 print(response_parse(response))             # ● разобрать сообщение сервера var + print();

@@ -17,15 +17,15 @@ s = socket(AF_INET, SOCK_STREAM)    # Создал сокет TCP
 
 # ○ -a <addr> - IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
 # ○ -p <port> - TCP-порт для работы (по умолчанию использует порт 7777);
-s.bind(('', 7777))                  # Запрепил адрес
+s.bind(('', 7777))                  # Закрепил адрес
 s.listen(5)                         # Жду входящий
 
 
 # Привожу ответ к клиенту к формату JIM
-def response_format(response_code, alert):
+def response_format(response_code, time, alert,):
     response = {
         "response": response_code,
-        "time": time.time(),
+        "time": time,
         "alert": alert
     }
     return json.dumps(response)
@@ -34,9 +34,9 @@ def response_format(response_code, alert):
 # ● формирует ответ клиенту def;
 def presence_parse(presence):
     if presence['action'] == 'presence':
-        response = response_format('200', 'Presence well done! :: ' + time.ctime(presence['time']))
+        response = response_format('200', time.time(), 'Presence well done! :: ' + time.ctime(presence['time']))
     else:
-        response = response_format('100', 'Unknown query :: ' + time.ctime(presence['time']))
+        response = response_format('100', time.time(), 'Unknown query :: ' + time.ctime(presence['time']))
     return response
 
 
