@@ -30,13 +30,14 @@ def presence_format(action):
 
 
 # ● разобрать сообщение сервера def;
-def response_format(response):
+def response_parse(response):
     output = 'Response code: ' + response['response'] + "\n"
-    output += '--- ' + response['alert'] + " ---\n"
+    output += '--- ' + response['alert'] + " ---"
     return output
 
 
-message = presence_format('presence')       # ● сформировать presence-сообщение var;
-s.send(message.encode('utf-8'))             # ● отправить сообщение серверу + кодировки;
+presence = presence_format('presence')      # ● сформировать presence-сообщение var;
+s.send(presence.encode('utf-8'))            # ● отправить сообщение серверу + кодировки;
+
 response = json.loads(s.recv(1024))         # ● получить ответ сервера + JSON parse;
-print(response_format(response))            # ● разобрать сообщение сервера var + print();
+print(response_parse(response))             # ● разобрать сообщение сервера var + print();
