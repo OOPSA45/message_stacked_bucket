@@ -1,52 +1,44 @@
+"""
+    ● сформировать presence-сообщение;
+    ● отправить сообщение серверу;
+    ● получить ответ сервера;
+    ● разобрать сообщение сервера;
+    ● параметры командной строки скрипта client.py <addr> [<port>]:
+        ○ addr - ip-адрес сервера;
+        ○ port - tcp-порт на сервере, по умолчанию 7777.
+"""
+
+
 from socket import *
 import time
 import json
 
-s = socket(AF_INET, SOCK_STREAM)  # Создать сокет TCP
-s.connect(('localhost', 8888))   # Соединиться с сервером
+s = socket(AF_INET, SOCK_STREAM)    # Создал сокет TCP
+
+# ○ addr - ip-адрес сервера;
+# ○ port - tcp-порт на сервере, по умолчанию 7777.
+s.connect(('localhost', 7777))      # Соединился с сервером
 
 
-# Преобразуем соосбещние в JIM и конвертим в JSON
-def format_action(action, text = None):
+# ● сформировать presence-сообщение в JIM def;
+
+def presence_format(action, time):
     message = {
         'action': action,
-        'time': time.time(),
+        'time': time,
     }
-
-    if text is not None:
-        message.update({'message': text})
-
-    on_output = json.dumps(message)
-    return on_output
+    return json.dumps(message)
 
 
-# Отправляем JSON на сервер
-def send_to_server(json_massege):
-    s.send(json_massege.encode('utf-8'))
+# ● разобрать сообщение сервера def;
+def response_parse(response):
+    output = 'Response code: ' + response['response'] + "\n"
+    output += '--- ' + response['alert'] + " ---"
+    return output
 
 
-# Форматируем ответ для вывода в клиенте
-def message_format(server_answer):
-    view_message = 'Получен код: ' + server_answer['response'] + "\n"
-    view_message += 'Сообщение от сервера: ' + server_answer['alert'] + "\n"
-    print(view_message)
-    if server_answer['response'] == '200':
-        server_chat()
+presence = presence_format('presence', time.time())     # ● сформировать presence-сообщение var;
+s.send(presence.encode('utf-8'))                        # ● отправить сообщение серверу + кодировки;
 
-
-def server_chat():
-    keyboard = input('Введите сообщение: ')
-    if keyboard != 'quit':
-        mess = format_action('msg', keyboard)
-        send_to_server(mess)
-    else:
-        mess = format_action('quit')
-        send_to_server(mess)
-        return s.close()
-    server_answer = json.loads(s.recv(1024))    # Принимаем ответ сервера и распарсиваем JSON
-    message_format(server_answer)
-
-message = format_action('presence')         # Формируем presence сообщение
-send_to_server(message)                     # Отправляем сообщение на сервер
-server_answer = json.loads(s.recv(1024))    # Принимаем ответ сервера и распарсиваем JSON
-message_format(server_answer)
+response = json.loads(s.recv(1024))         # ● получить ответ сервера + JSON parse;
+print(response_parse(response))             # ● разобрать сообщение сервера var + print();
