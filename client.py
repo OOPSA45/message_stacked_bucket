@@ -42,3 +42,4 @@ s.send(presence.encode('utf-8'))                        # ● отправить
 
 response = json.loads(s.recv(1024))         # ● получить ответ сервера + JSON parse;
 print(response_parse(response))             # ● разобрать сообщение сервера var + print();
+s.close()
