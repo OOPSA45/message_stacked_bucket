@@ -21,7 +21,6 @@ s.connect(('localhost', 7777))      # Соединился с сервером
 
 
 # ● сформировать presence-сообщение в JIM def;
-
 def presence_format(action, time):
     message = {
         'action': action,
@@ -33,7 +32,7 @@ def presence_format(action, time):
 # ● разобрать сообщение сервера def;
 def response_parse(response):
     output = 'Response code: ' + response['response'] + "\n"
-    output += '--- ' + response['alert'] + " ---"
+    output += '--- ' + response['alert'] + ' ---'
     return output
 
 

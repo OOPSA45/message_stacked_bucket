@@ -12,16 +12,15 @@ from socket import *
 import time
 import json
 
-# Создал сокет и слушаю
 s = socket(AF_INET, SOCK_STREAM)    # Создал сокет TCP
 
 # ○ -a <addr> - IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
 # ○ -p <port> - TCP-порт для работы (по умолчанию использует порт 7777);
 s.bind(('', 7777))                  # Закрепил адрес
-s.listen(5)                         # Жду входящий
+s.listen(5)                         # Ждёт входящий
 
 
-# Привожу ответ к клиенту к формату JIM
+# Форматирует ответ в JIM
 def response_format(response_code, time, alert,):
     response = {
         "response": response_code,
@@ -31,7 +30,7 @@ def response_format(response_code, time, alert,):
     return json.dumps(response)
 
 
-# ● формирует ответ клиенту def;
+# ● формирует ответ клиенту
 def presence_parse(presence):
     if presence['action'] == 'presence':
         response = response_format('200', time.time(), 'Presence well done! :: ' + time.ctime(presence['time']))
@@ -41,9 +40,13 @@ def presence_parse(presence):
 
 
 while True:
-    result = s.accept()                         # Принял запрос на соединение
+    result = s.accept()                         # Принимает запрос на соединение
     client, addr = result
     presence = json.loads(client.recv(1024))    # ● принимает сообщение клиента + JSON parse;
-    response = presence_parse(presence)         # ● формирует ответ клиенту var;
-    client.send(response.encode('utf-8'))       # ● отправляет ответ клиенту;
+    response = presence_parse(presence)         # ● формирует ответ клиенту
+    client.send(response.encode('utf-8'))       # ● отправляет ответ клиенту
     client.close()
+
+
+
+
