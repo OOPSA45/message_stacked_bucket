@@ -1,44 +1,44 @@
-"""
-    ● сформировать presence-сообщение;
-    ● отправить сообщение серверу;
-    ● получить ответ сервера;
-    ● разобрать сообщение сервера;
-    ● параметры командной строки скрипта client.py <addr> [<port>]:
-        ○ addr - ip-адрес сервера;
-        ○ port - tcp-порт на сервере, по умолчанию 7777.
-"""
-
-
 from socket import *
 import time
 import json
 
-s = socket(AF_INET, SOCK_STREAM)    # Создал сокет TCP
 
-# ○ addr - ip-адрес сервера;
-# ○ port - tcp-порт на сервере, по умолчанию 7777.
-s.connect(('localhost', 7777))      # Соединился с сервером
-
-
-# ● сформировать presence-сообщение в JIM def;
+# Сформировать presence-сообщение в JIM
 def presence_format(action, time):
     message = {
         'action': action,
         'time': time,
     }
-    return json.dumps(message)
+    return message
 
 
-# ● разобрать сообщение сервера def;
+# Разобрать сообщение сервера
 def response_parse(response):
     output = 'Response code: ' + response['response'] + "\n"
     output += '--- ' + response['alert'] + ' ---'
     return output
 
 
-presence = presence_format('presence', time.time())     # ● сформировать presence-сообщение var;
-s.send(presence.encode('utf-8'))                        # ● отправить сообщение серверу + кодировки;
+# Отправляет сообщение серверу
+def send_message(presence_message, s):
+    jpresence = json.dumps(presence_message)
+    bpresence = jpresence.encode('utf-8')
+    s.send(bpresence)
 
-response = json.loads(s.recv(1024))         # ● получить ответ сервера + JSON parse;
-print(response_parse(response))             # ● разобрать сообщение сервера var + print();
-s.close()
+
+# Получается сообщение от сервера
+def get_response(sock):
+    bresponse = sock.recv(1024)
+    jresponse = bresponse.decode('utf-8')
+    response = json.loads(jresponse)
+    return response
+
+
+if __name__ == '__main__':
+    s = socket(AF_INET, SOCK_STREAM)                                # Создал сокет TCP
+    s.connect(('localhost', 7777))                                  # Соединился с сервером
+    presence_message = presence_format('presence', time.time())     # Сформировать presence-сообщение
+    send_message(presence_message, s)
+    response = get_response(s)
+    response = response_parse(response)
+    print(response)

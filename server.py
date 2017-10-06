@@ -1,52 +1,55 @@
-"""
-    ● принимает сообщение клиента;
-    ● формирует ответ клиенту;
-    ● отправляет ответ клиенту;
-    ● имеет параметры командной строки:
-        ○ -p <port> - TCP-порт для работы (по умолчанию использует порт 7777);
-        ○ -a <addr> - IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
-"""
-
-
 from socket import *
 import time
 import json
 
-s = socket(AF_INET, SOCK_STREAM)    # Создал сокет TCP
 
-# ○ -a <addr> - IP-адрес для прослушивания (по умолчанию слушает все доступные адреса).
-# ○ -p <port> - TCP-порт для работы (по умолчанию использует порт 7777);
-s.bind(('', 7777))                  # Закрепил адрес
-s.listen(5)                         # Ждёт входящий
+# Получает сообщение от клиента
+def get_presence(client):
+    bpresence = client.recv(1024)
+    jpresence = bpresence.decode('utf-8')
+    presence = json.loads(jpresence)
+    return presence
 
 
-# Форматирует ответ в JIM
+# Отправляет сообщение клиенту
+def send_response(response, client):
+    jresponse = json.dumps(response)
+    bresponse = jresponse.encode('utf-8')
+    client.send(bresponse)
+
+
+# Форматирует в JIM
 def response_format(response_code, time, alert,):
     response = {
         "response": response_code,
         "time": time,
         "alert": alert
     }
-    return json.dumps(response)
-
-
-# ● формирует ответ клиенту
-def presence_parse(presence):
-    if presence['action'] == 'presence':
-        response = response_format('200', time.time(), 'Presence well done! :: ' + time.ctime(presence['time']))
-    else:
-        response = response_format('100', time.time(), 'Unknown query :: ' + time.ctime(presence['time']))
     return response
 
 
-while True:
-    result = s.accept()                         # Принимает запрос на соединение
-    client, addr = result
-    presence = json.loads(client.recv(1024))    # ● принимает сообщение клиента + JSON parse;
-    response = presence_parse(presence)         # ● формирует ответ клиенту
-    client.send(response.encode('utf-8'))       # ● отправляет ответ клиенту
-    client.close()
+# Формирует ответ клиенту
+def presence_parse(presence_message):
+    if presence_message['action'] == 'presence':
+        response_message = response_format('200', time.time(), 'Presence well done! :: ' + time.ctime(presence_message['time']))
+    else:
+        response_message = response_format('400', time.time(), 'Unknown query :: ' + time.ctime(presence_message['time']))
+    return response_message
 
+
+if __name__ == '__main__':
+    print('Сервер запущен')
+    s = socket(AF_INET, SOCK_STREAM)    # Создал сокет TCP
+    s.bind(('', 7777))                  # Закрепил адрес
+    s.listen(5)                         # Ждёт входящий
+
+    while True:
+        client, addr = s.accept()       # Принимает запрос на соединение
+        presence_message = get_presence(client)
+        print('Получено от клиента {}'.format(presence_message))
+        response = presence_parse(presence_message)
+        send_response(response, client)
+        client.close()
 
 
 
