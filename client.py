@@ -24,7 +24,6 @@ class Log:
 log = Log()
 
 
-
 # Сформировать presence-сообщение в JIM
 @log
 def presence_format(action, time):
@@ -60,11 +59,29 @@ def get_response(sock):
     return response
 
 
-if __name__ == '__main__':
-    s = socket(AF_INET, SOCK_STREAM)                                # Создал сокет TCP
-    s.connect(('localhost', 7777))                                  # Соединился с сервером
-    presence_message = presence_format('presence', time.time())     # Сформировать presence-сообщение
+@log
+def presence_send():
+    presence_message = presence_format('presence', time.time())
     send_message(presence_message, s)
     response = get_response(s)
     response = response_parse(response)
     print(response)
+
+
+if __name__ == '__main__':
+    s = socket(AF_INET, SOCK_STREAM)    # Создать сокет TCP
+    s.connect(('localhost', 7777))      # Соединиться с
+    # Отправляет presence
+    presence_send()
+
+    # Выбор режима с клавиотуры
+    client_mode = input('Говорить: -w / Слушать: -r ')
+
+    if client_mode == '-r':
+        while True:
+            tm = s.recv(1024)  # Принять не более 1024 байтов данных
+            print(tm.decode('UTF-8'))
+    else:
+        while True:
+            talk = input('Сообщение в общий чат: ')
+            s.send(talk.encode('UTF-8'))

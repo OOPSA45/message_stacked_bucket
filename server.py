@@ -19,6 +19,7 @@
 #   ● Для всех функций необходимо написать тесты.
 
 from socket import *
+import select
 import time
 import json
 import logging
@@ -84,23 +85,83 @@ def presence_parse(presence_message):
     return response_message
 
 
-if __name__ == '__main__':
-    print('Сервер запущен')
-    s = socket(AF_INET, SOCK_STREAM)    # Создал сокет TCP
-    port = 7777
+@log
+def new_listen_socket(address):
+    s = socket(AF_INET, SOCK_STREAM)
+    s.bind(address)
+    s.listen(5)
+    s.settimeout(0.2)
+    return s
+
+
+@log
+def connect_request(clients):
+    w = []
+    r = []
+
+    read_clients = []
+    write_clients = []
+
     try:
-        s.bind(('', port))  # Закрепил адрес
-    except OSError:
-        # Пишет ошибку в лог
-        SERVER_LOG.critical('Порт {} занят'.format(port), exc_info=True)
-        # sys.exc_info()[1],
+        r, w, e = select.select(clients, clients, [], 0)
+    except Exception as e:
+        pass  # Ничего не делать, если какой-то клиент отключился
 
-    s.listen(5)                         # Ждёт входящий
+    if r:
+        # Проверяет всех из которых слушает
+        for s_client_read in r:
+            try:
+                read_clients.append(s_client_read)
+            except:
+                read_clients.remove(s_client_read)
+    if w:
+        # Проверяет всех кто ждёт сообщения
+        for s_client_write in w:
+            try:
+                write_clients.append(s_client_write)
+            except:
+                # Удаляем клиента, который отключился
+                write_clients.remove(s_client_write)
 
-    while True:
-        client, addr = s.accept()       # Принимает запрос на соединение
-        presence_message = get_presence(client)
+    return read_clients, write_clients
+
+
+@log
+def client_set(read_clients, write_clients):
+    for r_client in read_clients:
+        # Рассылает response всем подключившимся и отправившим presence
+        presence_message = get_presence(r_client)
         print('Получено от клиента {}'.format(presence_message))
         response = presence_parse(presence_message)
-        send_response(response, client)
-        client.close()
+        send_response(response, r_client)
+    # Фиаско
+    # for w_client in write_clients:
+    #     w_client.send('1111'.encode('UTF-8'))
+
+
+@log
+def mainloop():
+    address = ('', 7777)
+    clients = []
+    sock = new_listen_socket(address)
+
+    while True:
+        try:
+            conn, addr = sock.accept()  # Принимает подключение
+        except OSError as e:
+            SERVER_LOG.critical('Порт {} занят'.format('7777'), exc_info=True)
+            pass                     # timeout вышел
+        else:
+            print("Получен запрос на соединение с %s" % str(addr))
+            clients.append(conn)
+        finally:
+            # Попытка разделить читающих и пишущих, видимо совсем не так должно это быть
+            read_clients, write_clients = connect_request(clients)
+            # А потом что-то с ними делать
+            client_set(read_clients, write_clients)
+
+
+print('Сервер запущен')
+
+if __name__ == '__main__':
+    mainloop()
