@@ -13,8 +13,6 @@
 from socket import *
 import json
 import time
-from socketserver import StreamRequestHandler
-from socketserver import TCPServer
 
 
 class MyMessMessage:
@@ -54,10 +52,16 @@ class MyMessClient:
             print(response.mess_get)
 
 
-class MyMessServer():
+class MyMessServer:
     def __init__(self):
-        self.server_socket = TCPServer(('', 7777), MyMessChat)
+        self.server_socket = socket(AF_INET, SOCK_STREAM)
+        self.server_socket.bind(('', 7777))
+        self.server_socket.listen(5)
         print('Сервер запущен')
+
+    def server_accept_in(self):
+        client_socket, addr = self.server_socket.accept()
+        self.get_client_query(client_socket)
 
     def get_client_query(self, client_socket):
         get_message = MyMessMessage(client_socket).mess_get
@@ -73,17 +77,9 @@ class MyMessServer():
         response = MyMessMessage(client_socket, {'response': '200', 'alert': 'Well done!'})
         response.mess_send()
 
-
-class MyMessChat(StreamRequestHandler):
-    def handle(self):
-        # self.request.sendall('111'.encode('latin-1'))
-        # print(self.rfile.write())
-        # print(self.request.rfile())
-        # client, addr = self.request
-        print(self.rfile.read())
-        resp = {'response': '200', 'alert': 'Well done!'}
-        self.request.sendall(json.dumps(resp).encode('UTF-8'))
-
+# class MyMessChat:
+#     def __init__(self):
+#     pass
 #
 # class MyMessChatC:
 #     def __init__(self):
