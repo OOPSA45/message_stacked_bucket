@@ -13,6 +13,7 @@
 from socket import *
 import json
 import time
+import select
 
 
 class MyMessMessage:
@@ -50,6 +51,23 @@ class MyMessClient:
         finally:
             response = MyMessMessage(self.client_socket)
             print(response.mess_get)
+            mode = input('r/w?: ')
+            self.client_chat(mode)
+
+    def client_chat(self, mode):
+
+        if mode == 'r':
+            # читаем сообщения и выводим на экран
+            while True:
+                new_message = MyMessMessage(self.client_socket)
+                print(new_message.mess_get)
+        elif mode == 'w':
+            # ждем ввода сообщения и шлем на сервер
+            while True:
+                message = input(':) >')
+                self.client_socket.send(json.dumps({'action': 'msg', 'message': message}).encode('UTF-8'))
+                # new_message = MyMessMessage(self.client_socket, {'action': 'msg', 'message': message})
+                # new_message.mess_send()
 
 
 class MyMessServer:
@@ -60,8 +78,51 @@ class MyMessServer:
         print('Сервер запущен')
 
     def server_accept_in(self):
-        client_socket, addr = self.server_socket.accept()
-        self.get_client_query(client_socket)
+        clients = []
+        while True:
+            try:
+                client_socket, addr = self.server_socket.accept()
+            except OSError as e:
+                pass
+            else:
+                print("Получен запрос на соединение от %s" % str(addr))
+                clients.append(client_socket)
+            finally:
+                wait = 0
+                r = []
+                w = []
+                try:
+                    r, w, e = select.select(clients, clients, [], wait)
+                except:
+                    pass  # Ничего не делать, если какой-то клиент отключился
+
+                requests = self.read_requests(r, clients)
+                self.write_responses(requests, w, clients)  # Выполним отправку входящих сообщений
+
+    def read_requests(self, r_clients, all_clients):
+        messages = []
+        for sock in r_clients:
+            try:
+                # Получаем входящие сообщения
+                messages.append(self.get_client_query(sock))
+            except:
+                print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
+                all_clients.remove(sock)
+
+        # Возвращаем словарь сообщений
+        return messages
+
+    def write_responses(self, messages, w_clients, all_clients):
+        for sock in w_clients:
+            # Будем отправлять каждое сообщение всем
+            for message in messages:
+                try:
+                    # Подготовить и отправить ответ сервера
+                    self.server_send_response(sock, message)
+                except:  # Сокет недоступен, клиент отключился
+                    print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
+                    sock.close()
+                    all_clients.remove(sock)
 
     def get_client_query(self, client_socket):
         get_message = MyMessMessage(client_socket).mess_get
@@ -72,9 +133,11 @@ class MyMessServer:
         if mess['action'] == 'presence':
             print('Получено от клиента {}'.format(mess))
             self.server_send_response(client_socket)
+        elif mess['action'] == 'msg':
+            print('Получено от клиента {}'.format(mess))
 
-    def server_send_response(self, client_socket):
-        response = MyMessMessage(client_socket, {'response': '200', 'alert': 'Well done!'})
+    def server_send_response(self, client_socket, mess='Well done!'):
+        response = MyMessMessage(client_socket, {'response': '200', 'alert': mess})
         response.mess_send()
 
 # class MyMessChat:
