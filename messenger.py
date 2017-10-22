@@ -3,7 +3,12 @@ import json
 import time
 import select
 
+# База
+import my_schema
+
+
 # Почти работает, но это не точно
+
 
 # Класс сообщение
 class MyMessMessage:
