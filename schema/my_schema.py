@@ -3,7 +3,7 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy import Table, Column, Integer, String, Text, MetaData
 from sqlalchemy import DateTime
-from sqlalchemy import func as sqfunc
+from sqlalchemy import func as sql_func
 from sqlalchemy.ext.declarative import declarative_base
 
 # ORM
@@ -21,7 +21,7 @@ class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     login = Column(String(64), nullable=False)
-    created_date = Column(DateTime, server_default=sqfunc.now())
+    created_date = Column(DateTime, server_default=sql_func.now())
 
 
 class UserHistory(Base):
@@ -29,7 +29,7 @@ class UserHistory(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
     ip_addr = Column(String(10), nullable=True)
-    time_login = Column(DateTime, server_default=sqfunc.now(), nullable=False)
+    time_login = Column(DateTime, server_default=sql_func.now(), nullable=False)
 
 
 class UserRelation(Base):
@@ -44,7 +44,7 @@ class Message(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
     message = Column(Text, nullable=False)
-    created_date = Column(DateTime, server_default=sqfunc.now())
+    created_date = Column(DateTime, server_default=sql_func.now())
 
 
 Base.metadata.create_all(engine)

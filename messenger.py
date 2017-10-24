@@ -1,11 +1,16 @@
-from socket import *
+from socket import socket, AF_INET, SOCK_STREAM
 import json
 import time
 import select
 
-# База
-import my_schema
+# База, иснталит все нужные таблицы
+import schema.my_schema
 
+# JIM протокол
+from jim.my_jim import MyJimMessage, MyJimResponse
+
+# TODO подключить логер log.log_config, сам класс где-то в репозитории валяется
+# TODO тесты .py, когда не известно
 
 # Почти работает, но это не точно
 
@@ -20,9 +25,17 @@ class MyMessMessage:
 
     # Умеет отправлять сообщения
     def mess_send(self):
-        # Сначала форматирует в JSON
-        self.cur_socket.send(self.mess_format().encode('utf-8'))
-        return self.mess_format().encode('utf-8')
+        # Отправляем в класс JIM
+        message = MyJimMessage(**self.raw_message, time=time.time())
+        self.cur_socket.send(bytes(message))
+        return message
+
+    # Умеет отправлять респонсы
+    def response_send(self):
+        # Отправляем в класс JIM
+        message = MyJimResponse(**self.raw_message, time='Time to kill!')
+        self.cur_socket.send(bytes(message))
+        return message
 
     # Умеет получать сообщения
     @property
@@ -31,31 +44,26 @@ class MyMessMessage:
         mess = json.loads(self.cur_socket.recv(1024).decode('utf-8'))
         return mess
 
-    # Форматирование + время для JIM
-    def mess_format(self):
-        self.raw_message['time'] = time.time()
-        json_message = json.dumps(self.raw_message)
-        return json_message
+    def __str__(self):
+        return self.raw_message
+
 
 # Класс клиент
 class MyMessClient:
     def __init__(self):
         self.client_socket = socket(AF_INET, SOCK_STREAM)
         self.presence = MyMessMessage(self.client_socket, {'action': 'presence'})
+        self.client_socket.connect(('localhost', 7777))
 
     # Подключается
     def client_connect(self):
-        try:
-            self.client_socket.connect(('localhost', 7777))
-        except ConnectionRefusedError:
-            print('Ошибка подключения')
-        else:
-            # Если всё ок, то отправляет пресенс
+            # Отправляет пресенс
+            # TODO: надо бы проверки сделать
             self.presence.mess_send()
-        finally:
             # Ждёт респонса
-            response = MyMessMessage(self.client_socket)
-            print(response.mess_get)
+            serv_response = MyMessMessage(self.client_socket)
+            response = serv_response.mess_get
+            print(response)
             # Дальше ввод с клавы читать/слушать
             mode = input('r/w?: ')
             self.client_chat(mode)
@@ -124,6 +132,9 @@ class MyMessServer:
     def write_responses(self, messages, w_clients, all_clients):
         for sock in w_clients:
             # Будем отправлять каждое сообщение всем
+            # mess = json.dumps({'response': '200', 'alert': 'Well done!'}).encode('UTF-8')
+            # sock.send(mess)
+            # print(sock)
             for message in messages:
                 try:
                     # Подготовить и отправить ответ сервера через метод
@@ -149,9 +160,9 @@ class MyMessServer:
             print('Получено от клиента {}'.format(mess))
 
     # Метод ответа (не дописал)
-    def server_send_response(self, client_socket, mess='Well done!'):
-        response = MyMessMessage(client_socket, {'response': '200', 'alert': mess})
-        response.mess_send()
+    def server_send_response(self, client_socket):
+        response = MyMessMessage(client_socket, {'response': '200', 'alert': 'Well done!'})
+        response.response_send()
 
 # class MyMessChat:
 #     def __init__(self):
