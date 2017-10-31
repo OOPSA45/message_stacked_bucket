@@ -1,4 +1,4 @@
-from messenger import *
+from client.main import MyMessClient
 
 if __name__ == '__main__':
     # Коннект к серверу происходит в __init__ при создании обьекта класса
