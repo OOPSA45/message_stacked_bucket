@@ -10,9 +10,6 @@ class MyMessMessage:
     def __init__(self, **raw_message):
         # Не форматированное сообщение
         self.raw_message = raw_message
-        print('*'*50)
-        print(raw_message)
-        print('*' * 50)
 
     # Умеет отправлять сообщения
     def mess_send(self, cur_socket):
