@@ -87,6 +87,8 @@ class MyMessServer:
             try:
                 # Получаем входящие сообщения через метод сервера и лепим в сообщения
                 get_message = MyMessMessage().mess_get(sock)
+                # УБИРАЕТ ЧЁРТОВО ВРЕМЯ, НЕДЕЛЯ ПОИСКОВ ОШИБКИ РАДИ ЭТОГО КОСТЫЛЯ (
+                get_message.pop('time')
                 print('Получено от клиента {}'.format(get_message))
                 messages.append(get_message)
             except:
@@ -104,7 +106,6 @@ class MyMessServer:
                 try:
                     # TODO: работает с косяком, ошибка где-то в классе протокола
                     transfer = MyMessMessage(**message)
-                    print(transfer)
                     transfer.mess_send(sock)
                 except:
                     print('Отключился в записи')
