@@ -10,14 +10,14 @@ Base = declarative_base()
 
 class User(Base):
     __tablename__ = 'User'
-    Id = Column(Integer, primary_key=True)
+    UserId = Column(Integer, primary_key=True)
     Login = Column(String, unique=True)
 
     def __init__(self, login):
         self.Login = login
 
     def __repr__(self):
-        return "<Contact ('%s')>" % self.Name
+        return "<Contact ('%s')>" % self.Login
 
     def __eq__(self, other):
         return self.Login == other.Login
@@ -25,12 +25,12 @@ class User(Base):
 
 class Message(Base):
     __tablename__ = 'Message'
-    Id = Column(Integer, primary_key=True)
+    MessageId = Column(Integer, primary_key=True)
     # Сюда будем писать кому было отправлено сообщение
     RelationId = Column(Integer, nullable=False)
     Text = Column(String)
     CreateData = Column(DateTime, server_default=sql_func.now())
-    UserId = Column(Integer, ForeignKey('User.Id'))
+    UserId = Column(Integer, ForeignKey('User.UserId'))
 
     User = relationship("User", back_populates="Messages")
 

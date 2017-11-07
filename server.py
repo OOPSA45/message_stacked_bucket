@@ -1,5 +1,5 @@
 import sys
-from server.main import MyMessServer
+from b_server.server_main import MyMessServer
 
 # from messenger import *
 
@@ -17,6 +17,6 @@ if __name__ == '__main__':
     except ValueError:
         print('Порт должен быть целым числом')
         sys.exit(0)
-
-    server = MyMessServer(addr, port)
+    name = 'server'
+    server = MyMessServer(name, addr, port)
     server.main_loop()

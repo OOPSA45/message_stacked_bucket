@@ -14,16 +14,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QListView" name="listView">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>181</width>
-      <height>361</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pushSend">
     <property name="geometry">
      <rect>
@@ -80,6 +70,26 @@
       <y>360</y>
       <width>571</width>
       <height>51</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="listWidgetContants">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>191</width>
+      <height>321</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEditAddContact">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>320</y>
+      <width>191</width>
+      <height>41</height>
      </rect>
     </property>
    </widget>

@@ -61,6 +61,12 @@ class MyJimResponse(MyJim):
         super().__init__(**kwargs)
 
 
+class MyJimOther(MyJim):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
+
 # message = b'{"response": "200", "alert": "Well done!"}'
 # bjm = MyJimResponse.create_from_bytes(message)
 # print(bjm)

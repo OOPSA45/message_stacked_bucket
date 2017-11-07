@@ -2,36 +2,42 @@ import json
 import time
 
 # JIM протокол
-from jim.my_jim import MyJimMessage, MyJimResponse
+from d_jim.my_jim import MyJimMessage, MyJimResponse, MyJimOther
+
 
 # Класс сообщение
 class MyMessMessage:
-    def __init__(self, cur_socket, raw_message=None):
-        # Сокет
-        self.cur_socket = cur_socket
+    def __init__(self, **raw_message):
         # Не форматированное сообщение
         self.raw_message = raw_message
+        print('*'*50)
+        print(raw_message)
+        print('*' * 50)
 
     # Умеет отправлять сообщения
-    def mess_send(self):
+    def mess_send(self, cur_socket):
         # Отправляем в класс JIM
         message = MyJimMessage(**self.raw_message, time=time.time())
-        self.cur_socket.send(bytes(message))
+        cur_socket.send(bytes(message))
         return message
 
     # Умеет отправлять респонсы
-    def response_send(self):
+    def response_send(self, cur_socket):
         # Отправляем в класс JIM
         # TODO: тут проверки
         message = MyJimResponse(**self.raw_message, time='Time to kill!')
-        self.cur_socket.send(bytes(message))
+        cur_socket.send(bytes(message))
+        return message
+
+    def other_send(self, cur_socket):
+        message = MyJimOther(**self.raw_message, time=time.time())
+        cur_socket.send(bytes(message))
         return message
 
     # Умеет получать сообщения
-    @property
-    def mess_get(self):
+    def mess_get(self, cur_socket):
         # Получает и сразу декодирует
-        message = self.cur_socket.recv(1024)
+        message = cur_socket.recv(1024)
         message = json.loads(message.decode('utf-8'))
         return message
 

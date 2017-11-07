@@ -1,14 +1,15 @@
 from socket import socket, AF_INET, SOCK_STREAM
 import select
 
-from temeplate_func.MyMessage import MyMessMessage
-from jim.my_jim import MyJimActions
-
-from server.schema.schema import DbAction
+from e_temeplate_func.MyMessage import MyMessMessage
+from d_jim.my_jim import MyJimActions, MyJimOther, MyJimField, MyJimResponseCode
+from b_server.db.server_db_model import Base
+from b_server.db.server_db_def import ServerDbControl
 
 
 class MyMessServer:
-    def __init__(self, addr, port):
+    def __init__(self, name, addr, port):
+        self.name = name
         self.addr = addr
         self.port = port
         # запуск сервера
@@ -16,7 +17,11 @@ class MyMessServer:
         self.action = MyJimActions()
         # Все кто будут подключаться
         self._clients = []
-        self.repo = DbAction('server.db')
+        self.db = ServerDbControl('{}.db'.format(self.name), 'b_server/db', Base)
+
+        self.actions = MyJimActions()
+        self.fields = MyJimField()
+        self.codes = MyJimResponseCode()
 
     def _start(self):
         s = socket(AF_INET, SOCK_STREAM)
@@ -36,8 +41,8 @@ class MyMessServer:
             # Принимает коннект от клиента
             client_socket, addr = self.socket.accept()
             # Ловит пресенс от клиента
-            presence = MyMessMessage(client_socket)
-            presence = presence.mess_get
+            presence = MyMessMessage()
+            presence = presence.mess_get(client_socket)
             print(presence)
 
             # Спорная проверка
@@ -50,8 +55,8 @@ class MyMessServer:
                 # TODO: запись в историю подключения клиента
 
                 # Оправляет респонс
-                response = MyMessMessage(client_socket, {'response': '200', 'alert': 'Well done!'})
-                response.response_send()
+                response = MyMessMessage(response=self.codes.OK)
+                response.response_send(client_socket)
             # TODO: else: - отправлять сообщение о неверном запросе
         except OSError as e:
             pass  # timeout вышел
@@ -81,7 +86,7 @@ class MyMessServer:
         for sock in r_clients:
             try:
                 # Получаем входящие сообщения через метод сервера и лепим в сообщения
-                get_message = MyMessMessage(sock).mess_get
+                get_message = MyMessMessage().mess_get(sock)
                 print('Получено от клиента {}'.format(get_message))
                 messages.append(get_message)
             except:
@@ -98,8 +103,9 @@ class MyMessServer:
             for message in messages:
                 try:
                     # TODO: работает с косяком, ошибка где-то в классе протокола
-                    transfer = MyMessMessage(sock, {'action': 'msg', 'message': message})
-                    transfer.mess_send()
+                    transfer = MyMessMessage(**message)
+                    print(transfer)
+                    transfer.mess_send(sock)
                 except:
                     print('Отключился в записи')
                     print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))

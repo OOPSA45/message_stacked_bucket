@@ -63,3 +63,12 @@ class MyJimResponseCode:
     def codes(self):
         return self.BASIC_NOTICE, self.OK, self.ACCEPTED, self.WRONG_REQUEST, self.SERVER_ERROR
 
+
+class MyJimOther:
+    def __init__(self):
+        self.USER = 'user'
+        self.ACCOUNT_NAME = 'account_name'
+        self.ADD_CONTACT = 'add_contact'
+        self.DEL_CONTACT = 'del_contact'
+        self.GET_CONTACTS = 'get_contacts'
+        self.QUANTITY = 'quantity'

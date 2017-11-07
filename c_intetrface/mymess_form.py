@@ -14,30 +14,29 @@ class Ui_MainWindow(object):
         MainWindow.resize(818, 459)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-
-        self.listView = QtWidgets.QListView(self.centralwidget)
-        self.listView.setGeometry(QtCore.QRect(0, 0, 181, 361))
-        self.listView.setObjectName("listView")
-
         self.pushSend = QtWidgets.QPushButton(self.centralwidget)
         self.pushSend.setGeometry(QtCore.QRect(760, 360, 51, 51))
         self.pushSend.setObjectName("pushSend")
-
         self.pushAdd = QtWidgets.QPushButton(self.centralwidget)
         self.pushAdd.setGeometry(QtCore.QRect(0, 360, 91, 51))
         self.pushAdd.setObjectName("pushAdd")
-
         self.pushDel = QtWidgets.QPushButton(self.centralwidget)
         self.pushDel.setGeometry(QtCore.QRect(90, 360, 91, 51))
         self.pushDel.setObjectName("pushDel")
-
         self.textEdit = QtWidgets.QTextEdit(self.centralwidget)
         self.textEdit.setGeometry(QtCore.QRect(190, 0, 621, 361))
         self.textEdit.setObjectName("textEdit")
-
         self.textAddMessage = QtWidgets.QTextEdit(self.centralwidget)
         self.textAddMessage.setGeometry(QtCore.QRect(190, 360, 571, 51))
         self.textAddMessage.setObjectName("textAddMessage")
+
+        self.listWidgetContants = QtWidgets.QListWidget(self.centralwidget)
+        self.listWidgetContants.setGeometry(QtCore.QRect(0, 0, 191, 321))
+        self.listWidgetContants.setObjectName("listWidgetContants")
+
+        self.lineEditAddContact = QtWidgets.QLineEdit(self.centralwidget)
+        self.lineEditAddContact.setGeometry(QtCore.QRect(0, 320, 191, 41))
+        self.lineEditAddContact.setObjectName("lineEditAddContact")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 818, 21))
