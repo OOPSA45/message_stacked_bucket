@@ -8,7 +8,7 @@ from c_intetrface.start_form import MyGui
 
 from b_server.db.server_db_def import ServerDbControl
 
-from d_jim.my_jim_conf import MyJimOther, MyJimActions
+from d_jim.my_jim_conf import MyJimOtherValue, MyJimActions, MyJimResponseCode
 
 
 class MyMessClient:
@@ -30,8 +30,9 @@ class MyMessClient:
         self.server_db = ServerDbControl('server.db', 'b_server/db', Base)
         self.add_toserver_db()
 
-        self.jim = MyJimOther()
+        self.jim_other = MyJimOtherValue()
         self.actions = MyJimActions()
+        self.codes = MyJimResponseCode()
 
         # Пресенс по дефолту
         self.presence = MyMessMessage(action=self.actions.PRESENCE)
@@ -40,10 +41,8 @@ class MyMessClient:
         # Стартует GUI
         self.gui = MyGui()
         '''
-        self._gui_start() запустится после респонса
+        self._gui_start() запустится после получения списка контактов
         '''
-
-
 
     def _connect(self):
         # Создать сокет TCP
@@ -59,28 +58,24 @@ class MyMessClient:
     def get_contacts(self):
         """Получить список контактов"""
         # формируем сообщение
-        list_message = MyMessMessage(action=self.jim.GET_CONTACTS)
+        list_message = MyMessMessage(action=self.jim_other.GET_CONTACTS, user=self.name)
         # отправляем
         list_message.other_send(self.socket)
-        # Принять не более 1024 байтов данных
-        list_message.mess_get(self.socket)
-        contact_list = list_message.mess_get(self.socket)
-        print(contact_list)
-        # message_bytes = self.socket.recv(1024)
-        # # Формируем сообщение из байт
-        # jm = JimResponse.create_from_bytes(message_bytes)
-        # if jm.response == ACCEPTED:
-        #     # Ждем второе сообщение со списком контактов
-        #     message_bytes = self.socket.recv(1024)
-        #     jm = JimMessage.create_from_bytes(message_bytes)
-        #     # выводим список контактов
-        #     contact_list = jm.action
-        #     print(contact_list)
-        #     # обновляем наш список контактов, на сервере правильный
-        #     self.repo.clear_contacts()
-        #     for contact in contact_list:
-        #         self.repo.add_contact(contact)
-        #     return contact_list
+        # Ждём респонса
+        response = list_message.mess_get(self.socket)
+        print(response)
+        if response['response'] == self.codes.ACCEPTED:
+            # Делаем список контактов потому что костыль, чтобы не переделывать методы GUI, пока так
+            contacts_list_for_gui = []
+            # Получаем контакты в зависимости от количества пришедшего из респонса
+            i = 0
+            while i <= response['quantity']:
+                contact_list = list_message.mess_get(self.socket)
+                contacts_list_for_gui.append(contact_list)
+                print(contact_list)
+                i += 1
+
+            self.gui_start(contacts_list_for_gui)
     '''
     Костыли [start]
     '''
@@ -96,11 +91,11 @@ class MyMessClient:
     Костыли [/end]
     '''
 
-    def gui_start(self):
+    def gui_start(self, contact_list):
         # Запрос на контакты на прямую у сервера
         # TODO: перенести всё это на сервер и запрашивать через JIM. А JIM работает косячно.
-        contacts = self.server_db.get_contacts(self.name)
-        self.gui.view_contact(contacts)
+        # contacts = self.server_db.get_contacts(self.name)
+        self.gui.view_contact(contact_list)
         self.gui.start_gui()
 
     def client_start(self):
@@ -131,8 +126,6 @@ class MyMessClient:
             # TODO: расшифровка респонса и нормальный вывод
             print('Грит {} ---- Полный {}'.format(response['response'], response))
 
-            # self.gui_start()
-
             mode = input('r/w?')
             if mode == 'r':
                 # Читает
@@ -154,8 +147,7 @@ class MyMessClient:
                     if message_str.startswith('list'):
                         self.get_contacts()
                     # Создаем сообщение по протоколу
-                    # Ох, костыли, но работает же
-                    msg = MyMessMessage(action=self.actions.MSG, message=message_str)
+                    msg = MyMessMessage(action=self.actions.MSG, message=message_str, user=self.name)
                     # Отправляем на сервер
                     msg.mess_send(self.socket)
             else:

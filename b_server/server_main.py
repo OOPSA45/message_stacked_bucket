@@ -2,7 +2,7 @@ from socket import socket, AF_INET, SOCK_STREAM
 import select
 
 from e_temeplate_func.MyMessage import MyMessMessage
-from d_jim.my_jim import MyJimActions, MyJimOther, MyJimField, MyJimResponseCode
+from d_jim.my_jim import MyJimActions, MyJimOtherValue, MyJimField, MyJimResponseCode
 from b_server.db.server_db_model import Base
 from b_server.db.server_db_def import ServerDbControl
 
@@ -14,7 +14,6 @@ class MyMessServer:
         self.port = port
         # запуск сервера
         self.socket = self._start()
-        self.action = MyJimActions()
         # Все кто будут подключаться
         self._clients = []
         self.db = ServerDbControl('{}.db'.format(self.name), 'b_server/db', Base)
@@ -22,6 +21,7 @@ class MyMessServer:
         self.actions = MyJimActions()
         self.fields = MyJimField()
         self.codes = MyJimResponseCode()
+        self.jim_other = MyJimOtherValue()
 
     def _start(self):
         s = socket(AF_INET, SOCK_STREAM)
@@ -47,7 +47,7 @@ class MyMessServer:
 
             # Спорная проверка
             # TODO: перенести всё в класс MyMessMessage, проверять возможные данные приходящие в action
-            if presence['action'] == self.action.PRESENCE:
+            if presence['action'] == self.actions.PRESENCE:
                 # TODO: получить имя пользователя, добавить в джим ACCOUNT_NAME + слать его с сервера
                 # Пока так
                 print("Подключается юзер %s" % str(addr))
@@ -64,7 +64,6 @@ class MyMessServer:
             print("Получен запрос на соединение от %s" % str(addr))
             # Добавляем в список подключившегося
             self._clients.append(client_socket)
-            # print(self._clients)
         finally:
             # Поверяем события
             wait = 0
@@ -75,7 +74,6 @@ class MyMessServer:
             except:
                 pass
 
-            # print(r)
             requests = self._read_requests(r)  # Получаем входящие сообщения
             self._write_responses(requests, w)  # Выполним отправку исходящих сообщений
 
@@ -103,13 +101,26 @@ class MyMessServer:
     def _write_responses(self, messages, w_clients):
         for sock in w_clients:
             for message in messages:
-                try:
-                    # TODO: работает с косяком, ошибка где-то в классе протокола
-                    transfer = MyMessMessage(**message)
-                    transfer.mess_send(sock)
-                except:
-                    print('Отключился в записи')
-                    print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
-                    sock.close()
-                    # Чистим общий список клиентов от отвалившихся
-                    self._clients.remove(sock)
+                if message['action'] == self.jim_other.GET_CONTACTS:
+                    client_login = message['user']
+                    contacts = self.db.get_contacts(client_login)
+                    response = MyMessMessage(response=self.codes.ACCEPTED, quantity=len(contacts))
+                    response.response_send(sock)
+                    for contact in contacts:
+                        contacts_list_send = MyMessMessage(action=self.actions.MSG, message=contact)
+                        contacts_list_send.mess_send(sock)
+                # else:
+                #     try:
+                #         transfer = MyMessMessage(**message)
+                #         transfer.mess_send(sock)
+                #     except:
+                #         print('Отключился в записи')
+                #         print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
+                #         sock.close()
+                #         # Чистим общий список клиентов от отвалившихся
+                #         self._clients.remove(sock)
+
+    def _get_contacts(self, login):
+        contacts = self.db.get_contacts(login)
+        return contacts
+

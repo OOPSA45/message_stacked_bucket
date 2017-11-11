@@ -64,7 +64,7 @@ class MyJimResponseCode:
         return self.BASIC_NOTICE, self.OK, self.ACCEPTED, self.WRONG_REQUEST, self.SERVER_ERROR
 
 
-class MyJimOther:
+class MyJimOtherValue:
     def __init__(self):
         self.USER = 'user'
         self.ACCOUNT_NAME = 'account_name'
