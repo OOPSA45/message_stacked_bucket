@@ -1,8 +1,10 @@
 import sys
 from b_server.server_main import MyMessServer
 
-# from messenger import *
 
+'''
+Главный скрипт для старта сервера
+'''
 if __name__ == '__main__':
     print('Запускаю сервер')
     # Получаем аргументы скрипта

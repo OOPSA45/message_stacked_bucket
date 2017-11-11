@@ -61,6 +61,7 @@ class MyJimResponse(MyJim):
         super().__init__(**kwargs)
 
 
+# Просто без всяких проверок, навсякий чтобы отсылать, если где-то глючит
 class MyJimOther(MyJim):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -18,6 +18,7 @@ class MyMessServer:
         self._clients = []
         self.db = ServerDbControl('{}.db'.format(self.name), 'b_server/db', Base)
 
+        # Тут все константы для JIM
         self.actions = MyJimActions()
         self.fields = MyJimField()
         self.codes = MyJimResponseCode()

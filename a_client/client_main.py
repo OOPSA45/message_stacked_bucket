@@ -26,9 +26,15 @@ class MyMessClient:
         # Сразу пишем туда подключившегося юзера
         self.add_to_client_db()
 
+        '''
+        Костыли [start]
+        '''
         # Подключаемся к базе сервера и пишем туда клиента и хистори
         self.server_db = ServerDbControl('server.db', 'b_server/db', Base)
         self.add_toserver_db()
+        '''
+        Костыли [end]
+        '''
 
         self.jim_other = MyJimOtherValue()
         self.actions = MyJimActions()
@@ -36,12 +42,11 @@ class MyMessClient:
 
         # Пресенс по дефолту
         self.presence = MyMessMessage(action=self.actions.PRESENCE)
-        # print(self.presence)
 
-        # Стартует GUI
+        # Стартует GUI - пока не стартуем, только экземпяр хз для чего, но мб пригодится
         self.gui = MyGui()
         '''
-        self._gui_start() запустится после получения списка контактов
+        self._gui_start() запустится после получения списка контактов - не запустится
         '''
 
     def _connect(self):
@@ -55,6 +60,7 @@ class MyMessClient:
         # Отключаемся
         self.socket.close()
 
+    # Чтобы получать контакты
     def get_contacts(self):
         """Получить список контактов"""
         # формируем сообщение
@@ -65,17 +71,15 @@ class MyMessClient:
         response = list_message.mess_get(self.socket)
         print(response)
         if response['response'] == self.codes.ACCEPTED:
-            # Делаем список контактов потому что костыль, чтобы не переделывать методы GUI, пока так
-            contacts_list_for_gui = []
             # Получаем контакты в зависимости от количества пришедшего из респонса
             i = 0
             while i <= response['quantity']:
                 contact_list = list_message.mess_get(self.socket)
-                contacts_list_for_gui.append(contact_list)
                 print(contact_list)
                 i += 1
 
-            self.gui_start(contacts_list_for_gui)
+    # Костыли. Использовалось для вывода контактов в GUI на прямую после старта клинта. GUI пока отключено
+    # работает только для записи новых клиентов в базу
     '''
     Костыли [start]
     '''
@@ -91,6 +95,7 @@ class MyMessClient:
     Костыли [/end]
     '''
 
+    # Метод для старта GUI, но заработает видимо только после подключения потоков :(
     def gui_start(self, contact_list):
         # Запрос на контакты на прямую у сервера
         # TODO: перенести всё это на сервер и запрашивать через JIM. А JIM работает косячно.
@@ -106,9 +111,9 @@ class MyMessClient:
 
         # TODO: тесты. Без тестов ничерта не понятно что вернётся и как это проверять дальше
         # Получает респонс
-        # Может так не очень верно, но создаёт экземпляр с сокетом для начала...
+        # Может так не очень верно, но создаёт экземпляр для начала...
         listen_sct = MyMessMessage()
-        # ...далее слушает его. Получает уже очишенные значения от байтов
+        # ...далее слушает сокет. Получает уже очишенные значения от байтов
         response = listen_sct.mess_get(self.socket)
 
         # TODO: подключить JIM -->
@@ -131,12 +136,10 @@ class MyMessClient:
                 # Читает
                 print('Слушаю')
                 while True:
-                    # Принять не более 1024 байтов данных
-                    # message_bytes = self.socket.recv(1024)
                     """
                     Что-то принимаем от сервера
                     """
-                    # Мы же выше уже сделали экземпляр с текущим сокетом для респонса, слушаем его же
+                    # Мы же выше уже сделали экземпляр для респонса, используем его же
                     message = listen_sct.mess_get(self.socket)
                     print(message)
             elif mode == 'w':
