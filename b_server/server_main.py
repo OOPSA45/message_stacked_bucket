@@ -109,7 +109,25 @@ class MyMessServer:
                     response.response_send(sock)
                     for contact in contacts:
                         contacts_list_send = MyMessMessage(action=self.actions.MSG, message=contact)
-                        contacts_list_send.mess_send(sock)
+                        contacts_list_send.other_send(sock)
+                elif message['action'] == self.jim_other.ADD_CONTACT:
+                    client_login = message['user']
+                    new_contact = message['contact_name']
+                    add = self.db.add_contact(client_login, new_contact)
+                    if add is not False:
+                        self.db.commit()
+                        response = MyMessMessage(response=self.codes.ACCEPTED)
+                        response.response_send(sock)
+                    else:
+                        response = MyMessMessage(response=self.codes.WRONG_REQUEST)
+                        response.response_send(sock)
+                        print('Такой контакт не зарегистрирован')
+                    # contacts = self.db.get_contacts(client_login)
+                    # response = MyMessMessage(response=self.codes.ACCEPTED, quantity=len(contacts))
+                    # response.response_send(sock)
+                    # for contact in contacts:
+                    #     contacts_list_send = MyMessMessage(action=self.actions.MSG, message=contact)
+                    #     contacts_list_send.other_send(sock)
                 # else:
                 #     try:
                 #         transfer = MyMessMessage(**message)

@@ -37,11 +37,15 @@ class ServerDbControl(DbBaseControl):
 
     def add_contact(self, client_login, contact_login):
         contact = self._get_client_by_login(contact_login)
+        # print(dir(contact))
         if contact:
             client = self._get_client_by_login(client_login)
             if client:
-                new_contact = ClientContact(client.ClientId, contact.ContactId)
+                new_contact = ClientContact(client.ClientId, contact.ClientId)
                 self.session.add(new_contact)
+                return True
+        else:
+            return False
 
     def del_contact(self, client_login, contact_login):
         contact = self._get_client_by_login(contact_login)

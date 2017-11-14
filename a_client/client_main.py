@@ -44,7 +44,7 @@ class MyMessClient:
         self.presence = MyMessMessage(action=self.actions.PRESENCE)
 
         # Стартует GUI - пока не стартуем, только экземпяр хз для чего, но мб пригодится
-        self.gui = MyGui()
+        # self.gui = MyGui()
         '''
         self._gui_start() запустится после получения списка контактов - не запустится
         '''
@@ -78,6 +78,18 @@ class MyMessClient:
                 print(contact_list)
                 i += 1
 
+    def add_contact(self, new_name):
+        add_contact = MyMessMessage(action=self.jim_other.ADD_CONTACT, user=self.name, contact_name=new_name)
+        add_contact.other_send(self.socket)
+        response = add_contact.mess_get(self.socket)
+        print(response)
+        if response['response'] == self.codes.ACCEPTED:
+            print('Новый контакт {} успешно добавлен'.format(new_name))
+        elif response['response'] == self.codes.WRONG_REQUEST:
+            print('Новый контакт {} не может быть добавлен, т.к. не зарегистрирован в системе'.format(new_name))
+
+
+
     # Костыли. Использовалось для вывода контактов в GUI на прямую после старта клинта. GUI пока отключено
     # работает только для записи новых клиентов в базу
     '''
@@ -96,12 +108,12 @@ class MyMessClient:
     '''
 
     # Метод для старта GUI, но заработает видимо только после подключения потоков :(
-    def gui_start(self, contact_list):
+    # def gui_start(self, contact_list):
         # Запрос на контакты на прямую у сервера
         # TODO: перенести всё это на сервер и запрашивать через JIM. А JIM работает косячно.
         # contacts = self.server_db.get_contacts(self.name)
-        self.gui.view_contact(contact_list)
-        self.gui.start_gui()
+        # self.gui.view_contact(contact_list)
+        # self.gui.start_gui()
 
     def client_start(self):
         # TODO: надо бы проверки сделать
@@ -149,6 +161,13 @@ class MyMessClient:
                     message_str = input('...> ')
                     if message_str.startswith('list'):
                         self.get_contacts()
+                    elif message_str.startswith('add'):
+                        try:
+                            new_name = message_str.split()[1]
+                        except IndexError:
+                            print('Нет имени')
+                        else:
+                            self.add_contact(new_name)
                     # Создаем сообщение по протоколу
                     msg = MyMessMessage(action=self.actions.MSG, message=message_str, user=self.name)
                     # Отправляем на сервер
