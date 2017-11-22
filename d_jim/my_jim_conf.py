@@ -72,3 +72,5 @@ class MyJimOtherValue:
         self.DEL_CONTACT = 'del_contact'
         self.GET_CONTACTS = 'get_contacts'
         self.QUANTITY = 'quantity'
+        self.TO = 'to'
+        self.FROM = 'from'
