@@ -41,7 +41,7 @@ class MyMessClient:
         self.codes = MyJimResponseCode()
 
         # Пресенс по дефолту
-        self.presence = MyMessMessage(action=self.actions.PRESENCE)
+        self.presence = MyMessMessage(action=self.actions.PRESENCE, user={self.jim_other.ACCOUNT_NAME: self.name})
 
         # Стартует GUI - пока не стартуем, только экземпяр хз для чего, но мб пригодится
         # self.gui = MyGui()
@@ -142,7 +142,6 @@ class MyMessClient:
         if response['response']:
             # TODO: расшифровка респонса и нормальный вывод
             print('Грит {} ---- Полный {}'.format(response['response'], response))
-
             mode = input('r/w?')
             if mode == 'r':
                 # Читает
@@ -157,6 +156,7 @@ class MyMessClient:
             elif mode == 'w':
                 # Пишет
                 print('Говорю')
+                # to_user_name = 'None'
                 while True:
                     message_str = input('...> ')
                     if message_str.startswith('list'):
@@ -168,8 +168,22 @@ class MyMessClient:
                             print('Нет имени')
                         else:
                             self.add_contact(new_name)
+                    else:
+                        '''
+                        Если это будет просто сообщение
+                        то будем искать в нём имя клиента, пока так - ...> message <name to>
+                        '''
+                        try:
+                            # И если второй параметр существует, то забираем его в качестве имени
+                            to_user_name = message_str.split()[1]
+                        except IndexError:
+                            # Если нет, то имя будет None, и тогда сервер разошлёт это сообщение всем читающим
+                            to_user_name = 'None'
                     # Создаем сообщение по протоколу
-                    msg = MyMessMessage(action=self.actions.MSG, message=message_str, user=self.name)
+                    msg = MyMessMessage(action=self.actions.MSG, message=message_str, user={
+                        self.jim_other.FROM: self.name,
+                        self.jim_other.TO: to_user_name
+                    })
                     # Отправляем на сервер
                     msg.mess_send(self.socket)
             else:
