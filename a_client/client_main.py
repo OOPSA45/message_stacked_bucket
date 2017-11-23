@@ -88,8 +88,6 @@ class MyMessClient:
         elif response['response'] == self.codes.WRONG_REQUEST:
             print('Новый контакт {} не может быть добавлен, т.к. не зарегистрирован в системе'.format(new_name))
 
-
-
     # Костыли. Использовалось для вывода контактов в GUI на прямую после старта клинта. GUI пока отключено
     # работает только для записи новых клиентов в базу
     '''
@@ -156,8 +154,8 @@ class MyMessClient:
             elif mode == 'w':
                 # Пишет
                 print('Говорю')
-                # to_user_name = 'None'
                 while True:
+                    to_user_name = None
                     message_str = input('...> ')
                     if message_str.startswith('list'):
                         self.get_contacts()
@@ -178,7 +176,7 @@ class MyMessClient:
                             to_user_name = message_str.split()[1]
                         except IndexError:
                             # Если нет, то имя будет None, и тогда сервер разошлёт это сообщение всем читающим
-                            to_user_name = 'None'
+                            pass
                     # Создаем сообщение по протоколу
                     msg = MyMessMessage(action=self.actions.MSG, message=message_str, user={
                         self.jim_other.FROM: self.name,

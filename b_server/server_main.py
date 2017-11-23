@@ -110,7 +110,25 @@ class MyMessServer:
 
     def _write_responses(self, messages, w_clients):
         for client_said in messages:
+            # from_name = соккет от которого пришло сообщение. Пока ни где не используется
             message, from_name = client_said
+
+            to_client = None
+            sock = None
+
+            # Будем проверять, указан ли получатель
+            if 'to' in message['user']:
+                # Если указанно имя получателя
+                if message['user']['to'] is not None:
+                    # Находим имя
+                    to_client = message['user']['to']
+            else:
+                # Иначе считаем, что отправитель сам же является получателем
+                to_client = message['user']
+                # Находим сокет по имени
+            if to_client is not None:
+                sock = self.client_names[to_client]
+
             if message['action'] == self.jim_other.GET_CONTACTS:
                 print('Клиент запросил контакты')
                 client_login = message['user']
@@ -118,8 +136,12 @@ class MyMessServer:
                 response = MyMessMessage(response=self.codes.ACCEPTED, quantity=len(contacts))
                 print('Список контактов клиента {}'.format(contacts))
                 response.response_send(sock)
+                # Перебираем и отправляем контакты
                 for contact in contacts:
                     contacts_list_send = MyMessMessage(action=self.actions.MSG, message=contact)
+                    print('Нужно что-то распечатать, '
+                          'иначе он запихнёт первые 2 контакта в одну строку. '
+                          'Хз как это побороть')
                     contacts_list_send.other_send(sock)
             elif message['action'] == self.jim_other.ADD_CONTACT:
                 client_login = message['user']
@@ -137,11 +159,7 @@ class MyMessServer:
                 # Если есть имя клиента которому отправляем
                 # TODO: проверять в БД существует такой клиент или нет
                 # TODO: а потом проверять есть ли связь между клиентами from и to
-                if message['user']['to'] != 'None':
-                    # Находим имя
-                    to_client = message['user']['to']
-                    # Находим сокет по имени
-                    sock = self.client_names[to_client]
+                if sock is not None:
                     # Формируем сообщение и пуляем на сокет соответствующий имени
                     transfer = MyMessMessage(**message)
                     transfer.mess_send(sock)
