@@ -8,7 +8,7 @@ from a_client.client_main import MyMessClient
 '''
 if __name__ == '__main__':
     # Коннект к серверу происходит в __init__ при создании обьекта класса
-    name = 'max'
+    name = 'sax'
     print(name)
     client = MyMessClient(name)
     # Добавляет клиентов для тестов
@@ -27,3 +27,4 @@ if __name__ == '__main__':
     # server.commit()
     # Старт режима сообщений
     client.client_start()
+    client.disconnect()

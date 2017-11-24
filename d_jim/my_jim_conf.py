@@ -10,6 +10,7 @@ class MyJimActions:
         self.AUTH = 'authenticate'
         self.MSG = 'msg'
         self.QUIT = 'quit'
+        self.RESPONSE = 'response'
 
     @property
     def actions(self):
@@ -31,6 +32,8 @@ class MyJimField:
 
         # Общие
         self.TIME = 'time'
+
+        self.MESSAGE = 'message'
 
     # Обязательные поля для клиента
     @property

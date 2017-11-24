@@ -96,6 +96,7 @@ class MyMessServer:
                 get_message = MyMessMessage().mess_get(sock)
                 # УБИРАЕТ ЧЁРТОВО ВРЕМЯ, НЕДЕЛЯ ПОИСКОВ ОШИБКИ РАДИ ЭТОГО КОСТЫЛЯ (
                 get_message.pop('time')
+                # get_message = sock.recv(1024)
                 print('Получено от клиента {}'.format(get_message))
                 # Сохраняем сообщение + сокет от которого оно пришло
                 messages.append((get_message, sock))
@@ -117,18 +118,20 @@ class MyMessServer:
             sock = None
 
             # Будем проверять, указан ли получатель
-            if 'to' in message['user']:
+            if self.jim_other.TO in message['user']:
                 # Если указанно имя получателя
                 if message['user']['to'] is not None:
                     # Находим имя
                     to_client = message['user']['to']
             else:
-                # Иначе считаем, что отправитель сам же является получателем
-                to_client = message['user']
-                # Находим сокет по имени
+                # Если сообщение не является MSG
+                if self.actions.MSG not in message[self.fields.ACTION]:
+                    # Считаем, что отправитель сам же является получателем
+                    to_client = message['user']
+                    # Находим сокет по имени
             if to_client is not None:
                 sock = self.client_names[to_client]
-
+            print(message)
             if message['action'] == self.jim_other.GET_CONTACTS:
                 print('Клиент запросил контакты')
                 client_login = message['user']
@@ -138,7 +141,7 @@ class MyMessServer:
                 response.response_send(sock)
                 # Перебираем и отправляем контакты
                 for contact in contacts:
-                    contacts_list_send = MyMessMessage(action=self.actions.MSG, message=contact)
+                    contacts_list_send = MyMessMessage(action=self.actions.RESPONSE, message=contact)
                     print('Нужно что-то распечатать, '
                           'иначе он запихнёт первые 2 контакта в одну строку. '
                           'Хз как это побороть')
@@ -166,6 +169,8 @@ class MyMessServer:
                 else:
                     # Если нет, то отправлять будем всем кто читает!
                     for sock in w_clients:
+                        if sock == self.client_names[message['user'][self.jim_other.FROM]]:
+                            continue
                         transfer = MyMessMessage(**message)
                         transfer.mess_send(sock)
                     # contacts = self.db.get_contacts(client_login)

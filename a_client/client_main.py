@@ -1,4 +1,6 @@
 from socket import socket, AF_INET, SOCK_STREAM
+import threading
+from queue import Queue
 
 from e_temeplate_func.MyMessage import MyMessMessage
 from a_client.db.client_db_def import ClientDbControl
@@ -7,12 +9,53 @@ from a_client.db.client_db_model import Base
 from c_intetrface.start_form import MyGui
 
 from b_server.db.server_db_def import ServerDbControl
+from d_jim.my_jim_conf import MyJimOtherValue, MyJimActions, MyJimResponseCode, MyJimField
 
-from d_jim.my_jim_conf import MyJimOtherValue, MyJimActions, MyJimResponseCode
+
+class MyMessReceiver:
+    # Получает сокет, получает очередь
+    def __init__(self, sock, sock_in_queue):
+        self.sock = sock
+        self.sock_in_queue = sock_in_queue
+
+        self.jim_other = MyJimOtherValue()
+        self.actions = MyJimActions()
+        self.codes = MyJimResponseCode()
+        self.fields = MyJimField()
+
+    def __call__(self):
+        self.is_alive = True
+        while True:
+            if not self.is_alive:
+                break
+            # Принимает сообщение по протоколу
+            # data = MyMessMessage()
+            # d = data.mess_get(self.sock)
+
+            # Получает респонс
+            listen_sct = MyMessMessage()
+            response = listen_sct.mess_get(self.sock)
+            # print('Поток в ресивере {}'.format(response))
+            if self.fields.RESPONSE in response:
+                if response[self.fields.RESPONSE] == self.codes.OK:
+                    print('Грит {} ---- Полный {}'.format(response['response'], response))
+                elif response[self.fields.RESPONSE] == self.codes.ACCEPTED:
+                    print('Запрос успешен {}'.format(response))
+                else:
+                    print('Неверный код ответа от сервера')
+            elif self.fields.ACTION in response:
+                if response[self.fields.ACTION] == self.actions.MSG:
+                    print('{} говорит --> {}'.format(
+                        response[self.jim_other.USER][self.jim_other.FROM],
+                        response[self.fields.MESSAGE])
+                    )
+                elif response[self.fields.ACTION] == self.actions.RESPONSE:
+                    print('Контакт << {} >> получен'.format(response[self.fields.MESSAGE]))
+
+            # TODO: принты и очередь
 
 
 class MyMessClient:
-
     def __init__(self, name, addr='localhost', port=7777):
         self.name = name
         self.addr = addr
@@ -22,10 +65,10 @@ class MyMessClient:
 
         # Создаём базу для клиента
         self.db = ClientDbControl('{}.db'.format(self.name), 'a_client/db', Base)
-
+        # TODO: так быть не должно, всё это нужно делать на сервере
         # Сразу пишем туда подключившегося юзера
         self.add_to_client_db()
-
+        # TODO: так быть не должно, всё это нужно делать на сервере
         '''
         Костыли [start]
         '''
@@ -43,6 +86,9 @@ class MyMessClient:
         # Пресенс по дефолту
         self.presence = MyMessMessage(action=self.actions.PRESENCE, user={self.jim_other.ACCOUNT_NAME: self.name})
 
+        # тут будет очередь
+        self.request_queue = Queue()
+
         # Стартует GUI - пока не стартуем, только экземпяр хз для чего, но мб пригодится
         # self.gui = MyGui()
         '''
@@ -59,34 +105,6 @@ class MyMessClient:
     def disconnect(self):
         # Отключаемся
         self.socket.close()
-
-    # Чтобы получать контакты
-    def get_contacts(self):
-        """Получить список контактов"""
-        # формируем сообщение
-        list_message = MyMessMessage(action=self.jim_other.GET_CONTACTS, user=self.name)
-        # отправляем
-        list_message.other_send(self.socket)
-        # Ждём респонса
-        response = list_message.mess_get(self.socket)
-        print(response)
-        if response['response'] == self.codes.ACCEPTED:
-            # Получаем контакты в зависимости от количества пришедшего из респонса
-            i = 0
-            while i <= response['quantity']:
-                contact_list = list_message.mess_get(self.socket)
-                print(contact_list)
-                i += 1
-
-    def add_contact(self, new_name):
-        add_contact = MyMessMessage(action=self.jim_other.ADD_CONTACT, user=self.name, contact_name=new_name)
-        add_contact.other_send(self.socket)
-        response = add_contact.mess_get(self.socket)
-        print(response)
-        if response['response'] == self.codes.ACCEPTED:
-            print('Новый контакт {} успешно добавлен'.format(new_name))
-        elif response['response'] == self.codes.WRONG_REQUEST:
-            print('Новый контакт {} не может быть добавлен, т.к. не зарегистрирован в системе'.format(new_name))
 
     # Костыли. Использовалось для вывода контактов в GUI на прямую после старта клинта. GUI пока отключено
     # работает только для записи новых клиентов в базу
@@ -114,83 +132,54 @@ class MyMessClient:
         # self.gui.start_gui()
 
     def client_start(self):
-        # TODO: надо бы проверки сделать
-
         # Отправляет пресенс
         self.presence.mess_send(self.socket)
 
-        # TODO: тесты. Без тестов ничерта не понятно что вернётся и как это проверять дальше
-        # Получает респонс
-        # Может так не очень верно, но создаёт экземпляр для начала...
-        listen_sct = MyMessMessage()
-        # ...далее слушает сокет. Получает уже очишенные значения от байтов
-        response = listen_sct.mess_get(self.socket)
-
-        # TODO: подключить JIM -->
-        """
-        Как сделать многострочный TODO?
-        --> возможно в MyMessMessage() нужно сделать отдельный метод .response_get
-        с подключённым MyJimResponse().create_from_bytes
-        и использовать вместо .mess_get
-        """
-        # Но чёт не вижу смысла проверять или гонять его через JIM, на входе же есть всё эт
-
-        # Если есть респонс
-        # Не тестировал, но поидее класс должен сразу возвращать сюда ошибку
-        if response['response']:
-            # TODO: расшифровка респонса и нормальный вывод
-            print('Грит {} ---- Полный {}'.format(response['response'], response))
-            mode = input('r/w?')
-            if mode == 'r':
-                # Читает
-                print('Слушаю')
-                while True:
-                    """
-                    Что-то принимаем от сервера
-                    """
-                    # Мы же выше уже сделали экземпляр для респонса, используем его же
-                    message = listen_sct.mess_get(self.socket)
-                    print(message)
-            elif mode == 'w':
-                # Пишет
-                print('Говорю')
-                while True:
-                    to_user_name = None
-                    message_str = input('...> ')
-                    if message_str.startswith('list'):
-                        self.get_contacts()
-                    elif message_str.startswith('add'):
-                        try:
-                            new_name = message_str.split()[1]
-                        except IndexError:
-                            print('Нет имени')
-                        else:
-                            self.add_contact(new_name)
-                    else:
-                        '''
-                        Если это будет просто сообщение
-                        то будем искать в нём имя клиента, пока так - ...> message <name to>
-                        '''
-                        try:
-                            # И если второй параметр существует, то забираем его в качестве имени
-                            to_user_name = message_str.split()[1]
-                        except IndexError:
-                            # Если нет, то имя будет None, и тогда сервер разошлёт это сообщение всем читающим
-                            pass
-                    # Создаем сообщение по протоколу
-                    msg = MyMessMessage(action=self.actions.MSG, message=message_str, user={
-                        self.jim_other.FROM: self.name,
-                        self.jim_other.TO: to_user_name
-                    })
-                    # Отправляем на сервер
-                    msg.mess_send(self.socket)
+        # Эм, ресивер. Будет слушать
+        listener = MyMessReceiver(self.socket, self.request_queue)
+        th_listen = threading.Thread(target=listener)
+        th_listen.daemon = True
+        th_listen.start()
+        # TODO: расшифровка респонса и нормальный вывод
+        while True:
+            to_user_name = None
+            message_str = input('...> ')
+            if message_str.startswith('list'):
+                self.get_contacts()
+            elif message_str.startswith('add'):
+                try:
+                    new_name = message_str.split()[1]
+                except IndexError:
+                    print('Нет имени')
+                else:
+                    self.add_contact(new_name)
             else:
-                print('Нет такого варианта {}'.format(mode))
-        # elif presence_response.response == SERVER_ERROR:
-        #     print('Внутрення ошибка сервера')
-        # elif presence_response.response == WRONG_REQUEST:
-        #     print('Неверный запрос на сервер')
+                '''
+                Если это будет просто сообщение
+                то будем искать в нём имя клиента, пока так - ...> message <name to>
+                '''
+                try:
+                    # И если второй параметр существует, то забираем его в качестве имени
+                    to_user_name = message_str.split()[1]
+                except IndexError:
+                    # Если нет, то имя будет None, и тогда сервер разошлёт это сообщение всем читающим
+                    pass
+                # Создаем сообщение по протоколу
+                msg = MyMessMessage(action=self.actions.MSG, message=message_str, user={
+                    self.jim_other.FROM: self.name,
+                    self.jim_other.TO: to_user_name
+                })
+                # Отправляем на сервер
+                msg.mess_send(self.socket)
 
-            # Получить контакты текущего юзера
-        else:
-            print('Неверный код ответа от сервера')
+    # Чтобы получать контакты
+    def get_contacts(self):
+        """Получить список контактов"""
+        # формируем сообщение
+        list_message = MyMessMessage(action=self.jim_other.GET_CONTACTS, user=self.name)
+        # отправляем
+        list_message.other_send(self.socket)
+
+    def add_contact(self, new_name):
+        add_contact = MyMessMessage(action=self.jim_other.ADD_CONTACT, user=self.name, contact_name=new_name)
+        add_contact.other_send(self.socket)
