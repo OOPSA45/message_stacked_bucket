@@ -36,6 +36,7 @@ class MyMessReceiver:
             listen_sct = MyMessMessage()
             response = listen_sct.mess_get(self.sock)
             # print('Поток в ресивере {}'.format(response))
+            # TODO: тут должны быть очереди
             if self.fields.RESPONSE in response:
                 if response[self.fields.RESPONSE] == self.codes.OK:
                     print('Грит {} ---- Полный {}'.format(response['response'], response))
