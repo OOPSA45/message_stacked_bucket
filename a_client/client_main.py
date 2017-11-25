@@ -6,8 +6,6 @@ from e_temeplate_func.MyMessage import MyMessMessage
 from a_client.db.client_db_def import ClientDbControl
 from a_client.db.client_db_model import Base
 
-from c_intetrface.start_form import MyGui
-
 from b_server.db.server_db_def import ServerDbControl
 from d_jim.my_jim_conf import MyJimOtherValue, MyJimActions, MyJimResponseCode, MyJimField
 

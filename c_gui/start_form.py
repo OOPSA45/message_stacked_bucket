@@ -1,17 +1,20 @@
 import sys
 from PyQt5 import QtWidgets
-import c_intetrface.mymess_form
+import c_gui.mymess_form
 # from a_client.db.client_db_def import ClientDbControl
 
 # import client
 
 
 class MyGui:
-    def __init__(self):
+    def __init__(self, name):
         self.app = QtWidgets.QApplication(sys.argv)
         self.window = QtWidgets.QMainWindow()
-        self.ui = c_intetrface.mymess_form.Ui_MainWindow()
+        self.ui = c_gui.mymess_form.Ui_MainWindow()
         self.ui.setupUi(self.window)
+
+        self.name = name
+        self.window.setWindowTitle('User: {}'.format(self.name))
 
     def start_gui(self):
         self.window.show()
