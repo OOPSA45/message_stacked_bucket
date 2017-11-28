@@ -18,10 +18,12 @@ class MyGui:
         self.app = QtWidgets.QApplication(sys.argv)
         # грузим главную форму
         self.window = QtWidgets.QMainWindow()
-        # закидываем имя клиента в форму
-        self.window.setWindowTitle('User: {}'.format(name))
+
         self.ui = c_gui.mymess_form.Ui_MainWindow()
         self.ui.setupUi(self.window)
+
+        # закидываем имя клиента в форму
+        self.window.setWindowTitle('User: {}'.format(name))
 
         # Создаём клиент
         self.client = MyMessClient(name)
