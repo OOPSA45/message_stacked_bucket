@@ -69,3 +69,18 @@ class ClientHistory(Base):
 
 
 Client.ClientHistories = relationship("ClientHistory", order_by=ClientHistory.CreateData, back_populates="Client")
+
+
+class ClientAvatar(Base):
+    __tablename__ = 'ClientAvatar'
+    AvatarId = Column(Integer, primary_key=True)
+    ClientId = Column(Integer, ForeignKey('Client.ClientId'))
+    AvatarName = Column(String(255), nullable=False)
+
+    def __init__(self, avatar_name, client_id):
+        self.AvatarName = avatar_name
+        self.ClientId = client_id
+
+    def __repr__(self):
+        return "<ClientAvatar ('%s', %d)>" % (self.ClientId, self.AvatarName)
+

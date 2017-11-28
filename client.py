@@ -1,4 +1,3 @@
-from a_client.client_main import MyMessClient
 from c_gui.start_form import MyGui
 
 '''
@@ -6,17 +5,16 @@ from c_gui.start_form import MyGui
 '''
 if __name__ == '__main__':
     # Коннект к серверу происходит в __init__ при создании обьекта класса
-    name = 'sax'
+    name = 'max'
     print(name)
-    client = MyMessClient(name)
-    # gui = MyGui(name)
-    #
-    #
-    #
-    #
-    # gui.start_gui()
 
+    gui = MyGui(name)
 
-    # Старт режима сообщений
-    client.client_start()
-    # client.disconnect()
+    # Связываем сигнал нажатия кнопки добавить со слотом функцией добавить контакт
+    gui.ui.pushAdd.clicked.connect(gui.add_contact)
+    gui.ui.pushDel.clicked.connect(gui.del_contact)
+    gui.ui.pushSend.clicked.connect(gui.send_message)
+    gui.ui.pushAvatar.clicked.connect(gui.file_open_explorer)
+
+    gui.start_gui()
+

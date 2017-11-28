@@ -1,4 +1,4 @@
-from a_client.db.client_db_model import User, Message
+from a_client.db.client_db_model import User, Message, ClientAvatar
 from e_temeplate_func.db_base_control import DbBaseControl
 
 
@@ -27,3 +27,16 @@ class ClientDbControl(DbBaseControl):
         if user:
             new_item = Message(text=text, user_id=user.UserId)
             self.session.add(new_item)
+
+    def add_avatar(self, avatar_name):
+            # old_avatar = self.session.query(ClientAvatar).filter(ClientAvatar.ClientId == user.ClientId)
+            avatar = ClientAvatar(avatar_name)
+            self.session.add(avatar)
+            # if old_avatar:
+            #     old_avatar.update({'AvatarName': avatar_name})
+            # else:
+            #     self.session.add(avatar)
+            # return True
+
+    def get_avatar(self):
+        return self.session.query(ClientAvatar).first()

@@ -11,6 +11,7 @@ class MyJimActions:
         self.MSG = 'msg'
         self.QUIT = 'quit'
         self.RESPONSE = 'response'
+        self.AVATAR = 'avatar'
 
     @property
     def actions(self):
@@ -77,3 +78,7 @@ class MyJimOtherValue:
         self.QUANTITY = 'quantity'
         self.TO = 'to'
         self.FROM = 'from'
+        self.AVATAR_NAME = 'avatar_name'
+        self.ADD = 'add'
+        self.DEL = 'del'
+        self.FILE_ACTION = 'file_action'

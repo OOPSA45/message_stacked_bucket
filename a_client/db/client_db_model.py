@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, BLOB
 from sqlalchemy.ext.declarative import declarative_base
 
 from sqlalchemy import func as sql_func
@@ -48,3 +48,12 @@ class Message(Base):
 
 
 User.Messages = relationship("Message", order_by=Message.CreateData, back_populates="User")
+
+
+class ClientAvatar(Base):
+    __tablename__ = 'ClientAvatar'
+    AvatarId = Column(Integer, primary_key=True)
+    AvatarByte = Column(BLOB, nullable=False)
+
+    def __init__(self, avatar_file):
+        self.AvatarByte = avatar_file

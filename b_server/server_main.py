@@ -140,16 +140,15 @@ class MyMessServer:
                 print('Список контактов клиента {}'.format(contacts))
                 response.response_send(sock)
                 # Перебираем и отправляем контакты
-                for contact in contacts:
-                    contacts_list_send = MyMessMessage(action=self.actions.RESPONSE, message=contact)
-                    print('Нужно что-то распечатать, '
-                          'иначе он запихнёт первые 2 контакта в одну строку. '
-                          'Хз как это побороть')
-                    contacts_list_send.other_send(sock)
+                contacts_list_send = MyMessMessage(action=self.actions.RESPONSE, message=contacts)
+                contacts_list_send.other_send(sock)
+                # for contact in contacts:
+                #     contacts_list_send = MyMessMessage(action=self.actions.RESPONSE, message=contact)
+                #     contacts_list_send.other_send(sock)
+                #     break
             elif message['action'] == self.jim_other.ADD_CONTACT:
-                client_login = message['user']
-                new_contact = message['contact_name']
-                add = self.db.add_contact(client_login, new_contact)
+                print('add contact')
+                add = self.db.add_contact(message['user'], message['contact_name'])
                 if add is not False:
                     self.db.commit()
                     response = MyMessMessage(response=self.codes.ACCEPTED)
@@ -158,6 +157,28 @@ class MyMessServer:
                     response = MyMessMessage(response=self.codes.WRONG_REQUEST)
                     response.response_send(sock)
                     print('Такой контакт не зарегистрирован')
+            elif message['action'] == self.jim_other.DEL_CONTACT:
+                print('del contact')
+                del_contact = self.db.del_contact(message['user'], message['contact_name'])
+                if del_contact is not False:
+                    self.db.commit()
+                    response = MyMessMessage(response=self.codes.ACCEPTED)
+                    response.response_send(sock)
+                else:
+                    response = MyMessMessage(response=self.codes.WRONG_REQUEST)
+                    response.response_send(sock)
+                    print('Не возможно удалить не существующий контакт')
+            elif message['action'] == self.actions.AVATAR:
+                print('avatar')
+                if message[self.actions.AVATAR][self.jim_other.FILE_ACTION] == self.jim_other.ADD:
+                    add_avatar = self.db.add_avatar(
+                        message[self.actions.AVATAR][self.jim_other.AVATAR_NAME],
+                        message[self.jim_other.USER]
+                    )
+                    if add_avatar is not False:
+                        self.db.commit()
+                        response = MyMessMessage(response=self.codes.ACCEPTED)
+                        response.response_send(sock)
             elif message['action'] == self.actions.MSG:
                 # Если есть имя клиента которому отправляем
                 # TODO: проверять в БД существует такой клиент или нет

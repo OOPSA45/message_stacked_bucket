@@ -1,4 +1,4 @@
-from b_server.db.server_db_model import Client, ClientContact, ClientHistory
+from b_server.db.server_db_model import Client, ClientContact, ClientHistory, ClientAvatar
 from e_temeplate_func.db_base_control import DbBaseControl
 
 
@@ -37,7 +37,6 @@ class ServerDbControl(DbBaseControl):
 
     def add_contact(self, client_login, contact_login):
         contact = self._get_client_by_login(contact_login)
-        # print(dir(contact))
         if contact:
             client = self._get_client_by_login(client_login)
             if client:
@@ -53,7 +52,24 @@ class ServerDbControl(DbBaseControl):
             client = self._get_client_by_login(client_login)
             if client:
                 del_contact = self.session.query(ClientContact).filter(
-                    ClientContact.ClientId == client.ClientId
-                    and
-                    ClientContact.ContactId == contact.ContactId)
+                    ClientContact.ClientId == client.ClientId).filter(
+                    ClientContact.ContactId == contact.ClientId).first()
                 self.session.delete(del_contact)
+                return True
+        else:
+            return False
+
+    def add_avatar(self, avatar_name, client_login):
+        client = self._get_client_by_login(client_login)
+        if client:
+            old_avatar = self.session.query(ClientAvatar).filter(ClientAvatar.ClientId == client.ClientId)
+            avatar = ClientAvatar(avatar_name, client.ClientId)
+            if old_avatar:
+                old_avatar.update({'AvatarName': avatar_name})
+            else:
+                self.session.add(avatar)
+            return True
+
+
+
+
