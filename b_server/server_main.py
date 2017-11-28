@@ -169,7 +169,6 @@ class MyMessServer:
                     response.response_send(sock)
                     print('Не возможно удалить не существующий контакт')
             elif message['action'] == self.actions.AVATAR:
-                print('avatar')
                 if message[self.actions.AVATAR][self.jim_other.FILE_ACTION] == self.jim_other.ADD:
                     add_avatar = self.db.add_avatar(
                         message[self.actions.AVATAR][self.jim_other.AVATAR_NAME],

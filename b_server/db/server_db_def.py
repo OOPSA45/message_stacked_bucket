@@ -62,13 +62,17 @@ class ServerDbControl(DbBaseControl):
     def add_avatar(self, avatar_name, client_login):
         client = self._get_client_by_login(client_login)
         if client:
-            old_avatar = self.session.query(ClientAvatar).filter(ClientAvatar.ClientId == client.ClientId)
+            old_avatar = self.session.query(ClientAvatar).filter(ClientAvatar.ClientId == client.ClientId).first()
             avatar = ClientAvatar(avatar_name, client.ClientId)
             if old_avatar:
-                old_avatar.update({'AvatarName': avatar_name})
+                # Как-то по идиотски, поэтому будет del
+                self.session.query(ClientAvatar).filter(ClientAvatar.ClientId == client.ClientId).update({
+                    'AvatarName': avatar_name})
+                # self.session.delete(old_avatar)
             else:
                 self.session.add(avatar)
             return True
+
 
 
 

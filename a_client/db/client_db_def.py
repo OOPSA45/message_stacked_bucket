@@ -29,14 +29,12 @@ class ClientDbControl(DbBaseControl):
             self.session.add(new_item)
 
     def add_avatar(self, avatar_name):
-            # old_avatar = self.session.query(ClientAvatar).filter(ClientAvatar.ClientId == user.ClientId)
+            old_avatar = self.session.query(ClientAvatar).first()
+            if old_avatar:
+                self.session.delete(old_avatar)
             avatar = ClientAvatar(avatar_name)
             self.session.add(avatar)
-            # if old_avatar:
-            #     old_avatar.update({'AvatarName': avatar_name})
-            # else:
-            #     self.session.add(avatar)
-            # return True
+            return True
 
     def get_avatar(self):
         return self.session.query(ClientAvatar).first()

@@ -3,14 +3,13 @@ import os
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QFileDialog, QHBoxLayout
-from PyQt5.QtGui import QPixmap, QIcon, QImage
 from PyQt5.QtCore import Qt, QThread, pyqtSlot
-from PIL import Image, ImageDraw
-from PIL.ImageQt import ImageQt
+
 
 import c_gui.mymess_form
 from a_client.client_main import MyMessClient
 from e_temeplate_func.MyReciver import MyGuiReceiver
+from e_temeplate_func.MyImageOperations import MyImageOperations
 
 
 class MyGui:
@@ -66,40 +65,6 @@ class MyGui:
         current_item = self.ui.listWidgetContants.takeItem(self.ui.listWidgetContants.row(current_item))
         del current_item
 
-    def file_open_explorer(self):
-        fname = QFileDialog.getOpenFileName(self.window, 'Открыть аватар')[0]
-
-        width = 141
-        height = 'auto'
-        pixmap = self.resize_img(fname, width, height)
-        self.ui.labelAvatar.setPixmap(pixmap)
-
-        # Делаем имя для отправки на сервер
-        file_name = os.path.basename(fname)
-
-        # TODO: Отправляем саму картинку на сервер
-
-        # TODO: Сохраняем картинку на клиенте
-
-        # Отправляем на сервер и пишем в базе клиента
-        file = open(fname, "rb")
-        img = file.read()
-        file.close()
-        self.client.add_avatar(file_name, img)
-
-    def resize_img(self, fname, width, height):
-        image = Image.open(fname)
-
-        if height == 'auto':
-            height = int(image.height / (image.width / width))
-
-        image = image.resize((width, height), Image.ANTIALIAS)
-        draw = ImageDraw.Draw(image)
-        img_tmp = ImageQt(image.convert('RGBA'))
-        pixmap = QPixmap.fromImage(img_tmp)
-
-        return pixmap
-
     def send_message(self):
         message = self.ui.textAddMessage.toPlainText()
         self.ui.textAddMessage.clear()
@@ -115,11 +80,30 @@ class MyGui:
         except AttributeError:
             pass
         else:
-            qimg = QImage.fromData(avatar)
-            pixmap = QPixmap.fromImage(qimg)
-            self.ui.labelAvatar.setPixmap(pixmap)
+            img = MyImageOperations().image_from_byte(avatar)
+            self.ui.labelAvatar.setPixmap(img)
 
-        # if avatar:
-        #
-        # else:
-        #     pass
+    def file_open_explorer(self):
+        # Открывает диалоговое окно, для выбора файла
+        file_dialog = QFileDialog.getOpenFileName(self.window, 'Открыть аватар')[0]
+        # Создаёт объект для операций с изображением
+        my_image = MyImageOperations(file_dialog)
+        # Делает ресайз (width, height)
+        image = my_image.resize_img(141, 'auto')
+        # В байты
+        image_bytes = my_image.from_pil_to_bytes(image)
+        # Pixmap
+        pix_map = my_image.pix_map_image(image)
+        # Пихает аватар в клиент
+        self.ui.labelAvatar.setPixmap(pix_map)
+
+        # Делаем имя для отправки на сервер
+        file_name = os.path.basename(file_dialog)
+
+        # TODO: Отправляем саму картинку на сервер
+
+        # TODO: Сохраняем картинку на клиенте
+
+        # Отправляем на сервер и пишем в базе клиента
+
+        self.client.add_avatar(file_name, image_bytes)
