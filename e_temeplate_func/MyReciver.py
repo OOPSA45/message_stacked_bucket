@@ -42,6 +42,7 @@ class MyMessReceiver:
                             response[self.jim_other.USER][self.jim_other.FROM],
                             response[self.fields.MESSAGE])
                         )
+                        self.process_message(response)
                 elif response[self.fields.ACTION] == self.actions.RESPONSE:
                     self.sock_in_queue.put(response)
 
@@ -75,8 +76,9 @@ class MyGuiReceiver(MyMessReceiver, QObject):
         MyMessReceiver.__init__(self, sock, request_queue)
         QObject.__init__(self)
 
-    # def process_message(self, message):
-    #     self.gotData.emit('{} >>> {}'.format(message.__dict__['from'], message.message))
+    def process_message(self, message):
+        self.gotData.emit('{} >>> {}'.format(message[self.jim_other.USER][self.jim_other.FROM],
+                                             message[self.fields.MESSAGE]))
 
     def poll(self):
         super().poll()

@@ -2,8 +2,8 @@ import sys
 import os
 
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QFileDialog, QHBoxLayout
-from PyQt5.QtCore import Qt, QThread, pyqtSlot
+from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtCore import QThread
 
 
 import c_gui.mymess_form
@@ -38,6 +38,9 @@ class MyGui:
         self.th.started.connect(self.listener.poll)
         self.th.start()
 
+        # Будет пустой юзер
+        self.user_to = None
+
         self.load_contacts()
         self.load_avatar()
 
@@ -67,10 +70,15 @@ class MyGui:
         current_item = self.ui.listWidgetContants.takeItem(self.ui.listWidgetContants.row(current_item))
         del current_item
 
+    # А тут поймаем юзера, при клике в списке
+    def get_user(self, item):
+        self.user_to = item.text()
+
     def send_message(self):
         message = self.ui.textAddMessage.toPlainText()
         self.ui.textAddMessage.clear()
         self.ui.listWidgetMessage.addItem(message)
+        self.client.send_message(self.user_to, message)
 
     def start_gui(self):
         self.window.show()
