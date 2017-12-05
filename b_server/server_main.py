@@ -51,12 +51,16 @@ class MyMessServer:
             presence = MyMessMessage()
             presence = presence.mess_get(client_socket)
             print(presence)
+            # Будем писать подключившегося юзера в базу
+            connected_user_name = presence[self.jim_other.USER][self.jim_other.ACCOUNT_NAME]
+            self.db.add_client(connected_user_name)
+            self.db.commit()
 
             # Спорная проверка
             # TODO: перенести всё в класс MyMessMessage, проверять возможные данные приходящие в action
-            if presence['action'] == self.actions.PRESENCE:
+            if presence[self.fields.ACTION] == self.actions.PRESENCE:
                 # Получаем имя подключившегося юзера
-                from_client_name = presence['user'][self.jim_other.ACCOUNT_NAME]
+                from_client_name = presence[self.jim_other.USER][self.jim_other.ACCOUNT_NAME]
                 # Пока так
                 print("Подключается юзер ---{}--- адрес: {}".format(from_client_name, str(addr)))
                 # TODO: проверить наличие пользователя в базе, если нет, то добавить 'if not'
@@ -116,25 +120,31 @@ class MyMessServer:
 
             to_client = None
             sock = None
+            user_mode = 'User on line'
 
             # Будем проверять, указан ли получатель
-            if self.jim_other.TO in message['user']:
+            if self.jim_other.TO in message[self.jim_other.USER]:
                 # Если указанно имя получателя
-                if message['user']['to'] is not None:
+                if message[self.jim_other.USER][self.jim_other.TO] is not None:
                     # Находим имя
-                    to_client = message['user']['to']
+                    to_client = message[self.jim_other.USER][self.jim_other.TO]
             else:
                 # Если сообщение не является MSG
                 if self.actions.MSG not in message[self.fields.ACTION]:
                     # Считаем, что отправитель сам же является получателем
-                    to_client = message['user']
-                    # Находим сокет по имени
+                    to_client = message[self.jim_other.USER]
+            # Находим сокет по имени
             if to_client is not None:
-                sock = self.client_names[to_client]
+                try:
+                    sock = self.client_names[to_client]
+                    user_mode = 'User on line'
+                except KeyError:
+                    user_mode = 'User off line'
             print(message)
-            if message['action'] == self.jim_other.GET_CONTACTS:
+            # Для принта контактов
+            if message[self.fields.ACTION] == self.jim_other.GET_CONTACTS:
                 print('Клиент запросил контакты')
-                client_login = message['user']
+                client_login = message[self.jim_other.USER]
                 contacts = self.db.get_contacts(client_login)
                 response = MyMessMessage(response=self.codes.ACCEPTED, quantity=len(contacts))
                 print('Список контактов клиента {}'.format(contacts))
@@ -146,9 +156,9 @@ class MyMessServer:
                 #     contacts_list_send = MyMessMessage(action=self.actions.RESPONSE, message=contact)
                 #     contacts_list_send.other_send(sock)
                 #     break
-            elif message['action'] == self.jim_other.ADD_CONTACT:
+            elif message[self.fields.ACTION] == self.jim_other.ADD_CONTACT:
                 print('add contact')
-                add = self.db.add_contact(message['user'], message['contact_name'])
+                add = self.db.add_contact(message[self.jim_other.USER], message[self.jim_other.CONTACT_NAME])
                 if add is not False:
                     self.db.commit()
                     response = MyMessMessage(response=self.codes.ACCEPTED)
@@ -157,9 +167,9 @@ class MyMessServer:
                     response = MyMessMessage(response=self.codes.WRONG_REQUEST)
                     response.response_send(sock)
                     print('Такой контакт не зарегистрирован')
-            elif message['action'] == self.jim_other.DEL_CONTACT:
+            elif message[self.fields.ACTION] == self.jim_other.DEL_CONTACT:
                 print('del contact')
-                del_contact = self.db.del_contact(message['user'], message['contact_name'])
+                del_contact = self.db.del_contact(message[self.jim_other.USER], message[self.jim_other.CONTACT_NAME])
                 if del_contact is not False:
                     self.db.commit()
                     response = MyMessMessage(response=self.codes.ACCEPTED)
@@ -168,7 +178,7 @@ class MyMessServer:
                     response = MyMessMessage(response=self.codes.WRONG_REQUEST)
                     response.response_send(sock)
                     print('Не возможно удалить не существующий контакт')
-            elif message['action'] == self.actions.AVATAR:
+            elif message[self.fields.ACTION] == self.actions.AVATAR:
                 if message[self.actions.AVATAR][self.jim_other.FILE_ACTION] == self.jim_other.ADD:
                     add_avatar = self.db.add_avatar(
                         message[self.actions.AVATAR][self.jim_other.AVATAR_NAME],
@@ -178,37 +188,47 @@ class MyMessServer:
                         self.db.commit()
                         response = MyMessMessage(response=self.codes.ACCEPTED)
                         response.response_send(sock)
-            elif message['action'] == self.actions.MSG:
+            elif message[self.fields.ACTION] == self.actions.MSG:
                 # Если есть имя клиента которому отправляем
                 # TODO: проверять в БД существует такой клиент или нет
                 # TODO: а потом проверять есть ли связь между клиентами from и to
                 if sock is not None:
-                    # Формируем сообщение и пуляем на сокет соответствующий имени
-                    transfer = MyMessMessage(**message)
-                    transfer.mess_send(sock)
-                else:
-                    # Если нет, то отправлять будем всем кто читает!
-                    for sock in w_clients:
-                        if sock == self.client_names[message['user'][self.jim_other.FROM]]:
-                            continue
+                    self.db.add_message_history(
+                        message[self.jim_other.USER][self.jim_other.FROM],
+                        message[self.jim_other.USER][self.jim_other.TO],
+                        message[self.fields.MESSAGE]
+                    )
+                self.db.commit()
+                if user_mode != 'User off line':
+                    print(user_mode)
+                    if sock is not None:
+                        # Формируем сообщение и пуляем на сокет соответствующий имени
+                        print('Сокет{}'.format(sock))
                         transfer = MyMessMessage(**message)
                         transfer.mess_send(sock)
-                    # contacts = self.db.get_contacts(client_login)
-                    # response = MyMessMessage(response=self.codes.ACCEPTED, quantity=len(contacts))
-                    # response.response_send(sock)
-                    # for contact in contacts:
-                    #     contacts_list_send = MyMessMessage(action=self.actions.MSG, message=contact)
-                    #     contacts_list_send.other_send(sock)
-                # else:
-                #     try:
-                #         transfer = MyMessMessage(**message)
-                #         transfer.mess_send(sock)
-                #     except:
-                #         print('Отключился в записи')
-                #         print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
-                #         sock.close()
-                #         # Чистим общий список клиентов от отвалившихся
-                #         self._clients.remove(sock)
+                    else:
+                        # Если нет, то отправлять будем всем кто читает!
+                        for sock in w_clients:
+                            if sock == self.client_names[message[self.jim_other.USER][self.jim_other.FROM]]:
+                                continue
+                            transfer = MyMessMessage(**message)
+                            transfer.mess_send(sock)
+                        # contacts = self.db.get_contacts(client_login)
+                        # response = MyMessMessage(response=self.codes.ACCEPTED, quantity=len(contacts))
+                        # response.response_send(sock)
+                        # for contact in contacts:
+                        #     contacts_list_send = MyMessMessage(action=self.actions.MSG, message=contact)
+                        #     contacts_list_send.other_send(sock)
+                    # else:
+                    #     try:
+                    #         transfer = MyMessMessage(**message)
+                    #         transfer.mess_send(sock)
+                    #     except:
+                    #         print('Отключился в записи')
+                    #         print('Клиент {} {} отключился'.format(sock.fileno(), sock.getpeername()))
+                    #         sock.close()
+                    #         # Чистим общий список клиентов от отвалившихся
+                    #         self._clients.remove(sock)
 
     def _get_contacts(self, login):
         contacts = self.db.get_contacts(login)

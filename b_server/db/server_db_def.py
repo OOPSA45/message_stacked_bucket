@@ -1,4 +1,4 @@
-from b_server.db.server_db_model import Client, ClientContact, ClientHistory, ClientAvatar
+from b_server.db.server_db_model import Client, ClientContact, ClientHistory, ClientAvatar, MessagesHistory
 from e_temeplate_func.db_base_control import DbBaseControl
 
 
@@ -73,6 +73,14 @@ class ServerDbControl(DbBaseControl):
                 self.session.add(avatar)
             return True
 
+    def add_message_history(self, client_login, contact_login, message):
+        client = self._get_client_by_login(client_login)
+        contact = self._get_client_by_login(contact_login)
+        # print('Клиент {}, Контакт {}'.format(client, contact))
+        if client and contact:
+            history = MessagesHistory(client.ClientId, contact.ClientId, message)
+            self.session.add(history)
+            return True
 
 
 

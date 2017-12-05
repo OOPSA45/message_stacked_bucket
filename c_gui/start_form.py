@@ -2,9 +2,9 @@ import sys
 import os
 
 from PyQt5 import QtWidgets
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtCore import QThread
-
 
 import c_gui.mymess_form
 from a_client.client_main import MyMessClient
@@ -44,8 +44,11 @@ class MyGui:
         self.load_contacts()
         self.load_avatar()
 
+        self.font = QFont()
+
     def load_contacts(self):
         contact_list = self.client.get_contacts()
+        contact_list['message'].append('Для всех')
         for user in contact_list['message']:
             self.ui.listWidgetContants.addItem(user)
 
@@ -72,13 +75,18 @@ class MyGui:
 
     # А тут поймаем юзера, при клике в списке
     def get_user(self, item):
-        self.user_to = item.text()
+        if item.text() != 'Для всех':
+            self.user_to = item.text()
+        else:
+            self.user_to = None
 
     def send_message(self):
-        message = self.ui.textAddMessage.toPlainText()
+        data = self.ui.textAddMessage.toPlainText()
+        self.client.send_message(self.user_to, data)
         self.ui.textAddMessage.clear()
-        self.ui.listWidgetMessage.addItem(message)
-        self.client.send_message(self.user_to, message)
+
+        message = data
+        self.ui.textBrowserMessage.append(message)
 
     def start_gui(self):
         self.window.show()
@@ -117,3 +125,8 @@ class MyGui:
         # Отправляем на сервер и пишем в базе клиента
 
         self.client.add_avatar(file_name, image_bytes)
+
+    def format(self, text_format):
+        message = self.ui.textAddMessage.textCursor().selectedText()
+        self.ui.textAddMessage.insertHtml('<{}>{}</{}>'.format(text_format, message, text_format))
+

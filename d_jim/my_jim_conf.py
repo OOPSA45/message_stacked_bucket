@@ -82,3 +82,4 @@ class MyJimOtherValue:
         self.ADD = 'add'
         self.DEL = 'del'
         self.FILE_ACTION = 'file_action'
+        self.CONTACT_NAME = 'contact_name'

@@ -31,7 +31,7 @@ class MyMessReceiver:
             response = listen_sct.mess_get(self.sock)
             if self.fields.RESPONSE in response:
                 if response[self.fields.RESPONSE] == self.codes.OK:
-                    print('Грит {} ---- Полный {}'.format(response['response'], response))
+                    print('Грит {} ---- Полный {}'.format(response[self.fields.RESPONSE], response))
                 elif response[self.fields.RESPONSE] == self.codes.ACCEPTED:
                     print('Запрос успешен {}'.format(response))
                 else:

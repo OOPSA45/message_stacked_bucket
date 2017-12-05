@@ -84,3 +84,22 @@ class ClientAvatar(Base):
     def __repr__(self):
         return "<ClientAvatar ('%s', %d)>" % (self.ClientId, self.AvatarName)
 
+class MessagesHistory(Base):
+    __tablename__ = 'MessagesHistory'
+    MessageId = Column(Integer, primary_key=True)
+    # Сюда будем писать кому было отправлено сообщение
+    ClientId = Column(Integer, ForeignKey('Client.ClientId'))
+    ContactId = Column(Integer, ForeignKey('Client.ClientId'))
+    Text = Column(String)
+    CreateData = Column(DateTime, server_default=sql_func.now())
+
+    # Client = relationship("Client", back_populates="Messages")
+
+    def __init__(self, client_id, contact_id, text):
+        self.ClientId = client_id
+        self.ContactId = contact_id
+        self.Text = text
+
+
+# Client.Messages = relationship("MessagesHistory", order_by=MessagesHistory.CreateData, back_populates="Client")
+
