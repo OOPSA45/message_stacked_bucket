@@ -46,41 +46,21 @@ class MyMessReceiver:
                 elif response[self.fields.ACTION] == self.actions.RESPONSE:
                     self.sock_in_queue.put(response)
 
-            # print('Поток в ресивере {}'.format(response))
-
-            # TODO: тут должны быть очереди
-            # if self.fields.RESPONSE in response:
-            #     if response[self.fields.RESPONSE] == self.codes.OK:
-            #         print('Грит {} ---- Полный {}'.format(response['response'], response))
-            #     elif response[self.fields.RESPONSE] == self.codes.ACCEPTED:
-            #         print('Запрос успешен {}'.format(response))
-            #     else:
-            #         print('Неверный код ответа от сервера')
-            # elif self.fields.ACTION in response:
-            #     if response[self.fields.ACTION] == self.actions.MSG:
-            #         print('{} говорит --> {}'.format(
-            #             response[self.jim_other.USER][self.jim_other.FROM],
-            #             response[self.fields.MESSAGE])
-            #         )
-            #     elif response[self.fields.ACTION] == self.actions.RESPONSE:
-            #         print('Контакт << {} >> получен'.format(response[self.fields.MESSAGE]))
-
-            # TODO: принты и очередь
-
 
 class MyGuiReceiver(MyMessReceiver, QObject):
-    gotData = pyqtSignal(str)
-    finished = pyqtSignal(int)
+    gotData = pyqtSignal(dict)
 
     def __init__(self, sock, request_queue):
         MyMessReceiver.__init__(self, sock, request_queue)
         QObject.__init__(self)
 
     def process_message(self, message):
-        self.gotData.emit('{} >>> {}'.format(message[self.jim_other.USER][self.jim_other.FROM],
-                                             message[self.fields.MESSAGE]))
+        to_all = False
+        text = message[self.fields.MESSAGE]
+        user_from = message[self.jim_other.USER][self.jim_other.FROM]
+        message = dict(text=text, user=user_from)
+        self.gotData.emit(message)
 
     def poll(self):
         super().poll()
-        self.finished.emit(0)
 

@@ -39,11 +39,6 @@ class Ui_MainWindow(object):
         self.pushSend = QtWidgets.QPushButton(self.groupBox_2)
         self.pushSend.setGeometry(QtCore.QRect(480, 290, 51, 41))
         self.pushSend.setObjectName("pushSend")
-        self.textBrowserMessage = QtWidgets.QTextBrowser(self.groupBox_2)
-        self.textBrowserMessage.setGeometry(QtCore.QRect(10, 20, 521, 231))
-        self.textBrowserMessage.setOverwriteMode(True)
-        self.textBrowserMessage.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
-        self.textBrowserMessage.setObjectName("textBrowserMessage")
         self.pushBold = QtWidgets.QPushButton(self.groupBox_2)
         self.pushBold.setGeometry(QtCore.QRect(10, 260, 31, 23))
         self.pushBold.setObjectName("pushBold")
@@ -53,6 +48,20 @@ class Ui_MainWindow(object):
         self.pushUnderline = QtWidgets.QPushButton(self.groupBox_2)
         self.pushUnderline.setGeometry(QtCore.QRect(90, 260, 31, 23))
         self.pushUnderline.setObjectName("pushUnderline")
+        self.stackedWidget = QtWidgets.QStackedWidget(self.groupBox_2)
+        self.stackedWidget.setGeometry(QtCore.QRect(10, 20, 521, 231))
+        self.stackedWidget.setObjectName("stackedWidget")
+        self.page = QtWidgets.QWidget()
+        self.page.setObjectName("page")
+        self.textBrowserMessage = QtWidgets.QTextBrowser(self.page)
+        self.textBrowserMessage.setGeometry(QtCore.QRect(0, 0, 521, 231))
+        self.textBrowserMessage.setOverwriteMode(True)
+        self.textBrowserMessage.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        self.textBrowserMessage.setObjectName("textBrowserMessage")
+        self.stackedWidget.addWidget(self.page)
+        self.page_2 = QtWidgets.QWidget()
+        self.page_2.setObjectName("page_2")
+        self.stackedWidget.addWidget(self.page_2)
         self.groupBox_3 = QtWidgets.QGroupBox(self.centralwidget)
         self.groupBox_3.setGeometry(QtCore.QRect(10, 0, 261, 151))
         self.groupBox_3.setObjectName("groupBox_3")
@@ -89,6 +98,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menu.menuAction())
 
         self.retranslateUi(MainWindow)
+        self.stackedWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -104,14 +114,14 @@ class Ui_MainWindow(object):
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
         self.pushSend.setText(_translate("MainWindow", "Send"))
+        self.pushBold.setText(_translate("MainWindow", "B"))
+        self.pushItalic.setText(_translate("MainWindow", "I"))
+        self.pushUnderline.setText(_translate("MainWindow", "U"))
         self.textBrowserMessage.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
-        self.pushBold.setText(_translate("MainWindow", "B"))
-        self.pushItalic.setText(_translate("MainWindow", "I"))
-        self.pushUnderline.setText(_translate("MainWindow", "U"))
         self.groupBox_3.setTitle(_translate("MainWindow", "Аватар"))
         self.pushAvatar.setText(_translate("MainWindow", "Загрузить"))
         self.menu.setTitle(_translate("MainWindow", "Меню"))

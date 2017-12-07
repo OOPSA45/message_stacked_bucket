@@ -1,16 +1,16 @@
+import sys
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QApplication
 
 from c_gui.start_form import MyGui
 '''
 Главный скрипт для старта клиента
 '''
 if __name__ == '__main__':
-    # Коннект к серверу происходит в __init__ при создании обьекта класса
-    name = 'sax'
 
-    print(name)
-
-    gui = MyGui(name)
+    # Создаём GUI
+    gui = MyGui()
+    print(gui.name)
 
     # Связываем сигнал нажатия кнопки добавить со слотом функцией добавить контакт
     gui.ui.pushAdd.clicked.connect(gui.add_contact)
@@ -27,13 +27,31 @@ if __name__ == '__main__':
     gui.ui.pushSend.clicked.connect(gui.send_message)
 
     # сигнал мы берем из нашего GuiReciever
-    @pyqtSlot(str)
+    @pyqtSlot(dict)
     def update_chat(data):
         ''' Отображение сообщения в истории
         '''
         try:
-            msg = data
-            gui.ui.textBrowserMessage.append(msg)
+            msg = data['text']
+            user = data['user']
+
+            current_user = gui.user_to
+
+            # Будем пушить сообщения сначала в словарь
+            # Если текущий выбранный юзер совпадает с юзером от которого пришло сообщение
+            if current_user == user:
+                # То добавляем это сообщение в текущий чат
+                gui.ui.textBrowserMessage.append('{}: {}'.format(user, msg))
+            # А если юзер не выделен, то пихаем его в словарь
+            else:
+                # Если уже есть словарь с таким юзером
+                if user in gui.messages:
+                    gui.messages[user].append('{}: {}'.format(user, msg))
+                # Иначе создаём такой словарь
+                else:
+                    gui.messages[user] = ['{}: {}'.format(user, msg)]
+            print(gui.messages)
+
         except Exception as e:
             print(e)
     gui.listener.gotData.connect(update_chat)
