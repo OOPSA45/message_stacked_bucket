@@ -1,33 +1,30 @@
-message_stacked_bucket
-=====================
+# message_stacked_bucket
+
 Client is a server application, a chat, developed for educational purposes. Perhaps, someday it will be finished or remade.
 
-Installation
-============
+## Installation
 Installing from pypi (using pip):
 
     pip install message-stacked-bucket
 
-Usage
-=====
-First
------
+## Usage
+
+### First
 
 Start server in ``cmd`` from the application folder ``...\Python36\Lib\site-packages\message stacked bucket>``
 
     python server.py
 
-Then
-----
+### Then
+
 Start one or more client in ``cmd`` from the application folder ``...\Python36\Lib\site-packages\message stacked bucket>``
 
     python client.py
 
-Dependence
-==========
+## Dependence
 
 ``Python 3`` ``PyQt5`` ``SQLAlchemy`` ``pillow``
 
-Pypi pacage
-==========
+## Pypi pacage
+
 https://pypi.python.org/pypi/message-stacked-bucket
