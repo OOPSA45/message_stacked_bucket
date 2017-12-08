@@ -9,13 +9,13 @@ Installing from pypi (using pip):
 
 ## Usage
 
-### First
+#### First
 
 Start server in ``cmd`` from the application folder ``...\Python36\Lib\site-packages\message stacked bucket>``
 
     python server.py
 
-### Then
+#### Then
 
 Start one or more client in ``cmd`` from the application folder ``...\Python36\Lib\site-packages\message stacked bucket>``
 
