@@ -17,7 +17,7 @@ Start server in ``cmd`` from the application folder ``...\Python36\Lib\site-pack
 
 #### Then
 
-Start one or more client in ``cmd`` from the application folder ``...\Python36\Lib\site-packages\message stacked bucket>``
+Start one or more clients in ``cmd`` from the application folder ``...\Python36\Lib\site-packages\message stacked bucket>``
 
     python client.py
 
