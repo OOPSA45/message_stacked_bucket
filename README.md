@@ -1,6 +1,6 @@
 # message_stacked_bucket
 
-Client is a server application, a chat, developed for educational purposes. Perhaps, someday it will be finished or remade.
+Client + Server application, chat, messenger, developed for educational purposes. Perhaps, someday it will be finished or remade.
 
 ## Installation
 Installing from pypi (using pip):
